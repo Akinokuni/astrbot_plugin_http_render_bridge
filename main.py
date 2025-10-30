@@ -322,9 +322,8 @@ class HttpRenderBridge(Star):
                 qr_base64 = await fetch_qr_code_as_base64(link_url)
                 if qr_base64:
                     render_data['qr_code_base64'] = qr_base64
-                    # 如果没有提供qr_text，使用默认文本
-                    if 'qr_text' not in render_data:
-                        render_data['qr_text'] = '扫码访问链接'
+                    # 如果没有提供qr_text，让模板使用自己的默认值
+                    # 不在这里设置默认值，让Jinja2模板的default过滤器处理
                     logger.info(f"[AstrBot Plugin HTTP Render Bridge] 二维码生成成功，已添加到渲染数据")
                 else:
                     logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 二维码生成失败，将不显示二维码")

@@ -19,84 +19,14 @@
         "type": "int",
         "default": 8080
     },
-    "template_notification_enabled": {
-        "description": "启用通知模板",
-        "type": "bool",
-        "default": true
-    },
-    "template_notification_width": {
-        "description": "通知模板渲染宽度",
+    "render_width": {
+        "description": "默认渲染宽度 (像素)",
         "type": "int",
         "default": 800
     },
-    "template_notification_quality": {
-        "description": "通知模板图片质量",
+    "render_quality": {
+        "description": "默认图片质量 (low/medium/high/ultra)",
         "type": "string",
         "default": "high"
-    },
-    "template_alert_enabled": {
-        "description": "启用警告模板",
-        "type": "bool",
-        "default": false
-    },
-    "template_alert_width": {
-        "description": "警告模板渲染宽度",
-        "type": "int",
-        "default": 800
-    },
-    "template_alert_quality": {
-        "description": "警告模板图片质量",
-        "type": "string",
-        "default": "high"
-    },
-    "template_success_enabled": {
-        "description": "启用成功模板",
-        "type": "bool",
-        "default": false
-    },
-    "template_success_width": {
-        "description": "成功模板渲染宽度",
-        "type": "int",
-        "default": 800
-    },
-    "template_success_quality": {
-        "description": "成功模板图片质量",
-        "type": "string",
-        "default": "high"
-    },
-    "template_nomination_enabled": {
-        "description": "启用提名模板",
-        "type": "bool",
-        "default": false
-    },
-    "template_nomination_width": {
-        "description": "提名模板渲染宽度",
-        "type": "int",
-        "default": 900
-    },
-    "template_nomination_quality": {
-        "description": "提名模板图片质量",
-        "type": "string",
-        "default": "high"
-    },
-    "template_report_enabled": {
-        "description": "启用报告模板",
-        "type": "bool",
-        "default": false
-    },
-    "template_report_width": {
-        "description": "报告模板渲染宽度",
-        "type": "int",
-        "default": 800
-    },
-    "template_report_quality": {
-        "description": "报告模板图片质量",
-        "type": "string",
-        "default": "high"
-    },
-    "custom_templates": {
-        "description": "自定义模板配置",
-        "type": "text",
-        "default": "{}"
     }
 }

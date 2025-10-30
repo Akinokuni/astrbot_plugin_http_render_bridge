@@ -52,118 +52,46 @@ class HttpRenderBridge(Star):
         plugin_dir = os.path.dirname(os.path.abspath(__file__))
         templates_dir = os.path.join(plugin_dir, 'templates')
         
-        # 定义内置模板配置
-        builtin_templates = {
-            'notification': {
-                'name': '通知模板',
-                'description': '通用通知消息模板',
-                'file': 'notification.html',
-                'enabled_key': 'template_notification_enabled',
-                'width_key': 'template_notification_width',
-                'quality_key': 'template_notification_quality'
-            },
-            'alert': {
-                'name': '警告模板',
-                'description': '系统警告和错误消息模板',
-                'file': 'alert.html',
-                'enabled_key': 'template_alert_enabled',
-                'width_key': 'template_alert_width',
-                'quality_key': 'template_alert_quality'
-            },
-            'success': {
-                'name': '成功模板',
-                'description': '操作成功消息模板',
-                'file': 'success.html',
-                'enabled_key': 'template_success_enabled',
-                'width_key': 'template_success_width',
-                'quality_key': 'template_success_quality'
-            },
-            'nomination': {
-                'name': '提名模板',
-                'description': '十二🥥器提名展示模板',
-                'file': 'nomination.html',
-                'enabled_key': 'template_nomination_enabled',
-                'width_key': 'template_nomination_width',
-                'quality_key': 'template_nomination_quality'
-            },
-            'report': {
-                'name': '报告模板',
-                'description': '数据报告展示模板',
-                'file': 'report.html',
-                'enabled_key': 'template_report_enabled',
-                'width_key': 'template_report_width',
-                'quality_key': 'template_report_quality'
-            }
-        }
+        # 获取默认配置
+        default_width = self.config.get('render_width', 800)
+        default_quality = self.config.get('render_quality', 'high')
         
-        # 加载内置模板
-        for alias, template_config in builtin_templates.items():
-            # 检查是否启用（默认启用通知模板，其他默认禁用）
-            default_enabled = alias == 'notification'
-            if self.config.get(template_config['enabled_key'], default_enabled):
-                template_file = os.path.join(templates_dir, template_config['file'])
-                
-                try:
-                    if os.path.exists(template_file):
-                        with open(template_file, 'r', encoding='utf-8') as f:
-                            html_content = f.read()
+        # 自动扫描templates目录下的所有HTML文件
+        if os.path.exists(templates_dir):
+            try:
+                for filename in os.listdir(templates_dir):
+                    if filename.endswith('.html'):
+                        template_name = filename[:-5]  # 移除.html后缀
+                        template_file = os.path.join(templates_dir, filename)
                         
-                        self.templates_cache[alias] = {
-                            'template': Template(html_content),
-                            'render_width': self.config.get(template_config['width_key'], 800),
-                            'render_quality': self.config.get(template_config['quality_key'], 'high'),
-                            'name': template_config['name'],
-                            'description': template_config['description']
-                        }
-                        logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载{template_config['name']}: {template_file}")
-                    else:
-                        logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 模板文件不存在: {template_file}")
-                        
-                except Exception as e:
-                    logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载{template_config['name']}失败: {e}")
-        
-        # 加载自定义模板（从JSON配置）
-        custom_templates_json = self.config.get('custom_templates', '{}')
-        try:
-            custom_templates = json.loads(custom_templates_json) if custom_templates_json else {}
-            for alias, template_config in custom_templates.items():
-                html_content = template_config.get('html_content', '')
-                if html_content:
-                    try:
-                        self.templates_cache[alias] = {
-                            'template': Template(html_content),
-                            'render_width': template_config.get('render_width', 800),
-                            'render_quality': template_config.get('render_quality', 'high'),
-                            'name': template_config.get('name', alias),
-                            'description': template_config.get('description', '')
-                        }
-                        logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载自定义模板: {alias} ({template_config.get('name', alias)})")
-                    except Exception as e:
-                        logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载自定义模板 {alias} 失败: {e}")
-        except json.JSONDecodeError as e:
-            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 解析自定义模板配置失败: {e}")
+                        try:
+                            with open(template_file, 'r', encoding='utf-8') as f:
+                                html_content = f.read()
+                            
+                            self.templates_cache[template_name] = {
+                                'template': Template(html_content),
+                                'render_width': default_width,
+                                'render_quality': default_quality,
+                                'name': f'{template_name.title()}模板',
+                                'description': f'基于{filename}的模板',
+                                'file': filename
+                            }
+                            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载模板: {template_name} ({filename})")
+                            
+                        except Exception as e:
+                            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载模板文件 {filename} 失败: {e}")
+                            
+            except Exception as e:
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 扫描模板目录失败: {e}")
+        else:
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板目录不存在: {templates_dir}")
         
         # 确保至少有一个可用的模板
         if not self.templates_cache:
-            # 加载默认模板作为后备
-            default_template_file = os.path.join(templates_dir, 'default.html')
-            try:
-                if os.path.exists(default_template_file):
-                    with open(default_template_file, 'r', encoding='utf-8') as f:
-                        html_content = f.read()
-                    
-                    self.templates_cache['notification'] = {
-                        'template': Template(html_content),
-                        'render_width': 800,
-                        'render_quality': 'high',
-                        'name': '默认通知模板',
-                        'description': '后备通知模板'
-                    }
-                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载默认模板作为后备: {default_template_file}")
-                else:
-                    logger.error(f"[AstrBot Plugin HTTP Render Bridge] 默认模板文件不存在: {default_template_file}")
-            except Exception as e:
-                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载默认模板失败: {e}")
+            logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 没有找到任何可用的模板文件")
+        else:
+            template_names = list(self.templates_cache.keys())
+            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 共加载 {len(template_names)} 个模板: {', '.join(template_names)}")
 
     async def start_server(self):
         """启动HTTP服务器"""
@@ -193,11 +121,20 @@ class HttpRenderBridge(Star):
 
     async def health_handler(self, request: web.Request):
         """健康检查处理器"""
+        available_templates = []
+        for name, info in self.templates_cache.items():
+            available_templates.append({
+                'name': name,
+                'file': info.get('file', f'{name}.html'),
+                'description': info.get('description', '')
+            })
+        
         return web.json_response({
             'status': 'ok',
             'plugin': 'astrbot_plugin_http_render_bridge',
             'version': '1.0.0',
             'templates_count': len(self.templates_cache),
+            'available_templates': available_templates,
             'timestamp': datetime.now().isoformat()
         })
 
@@ -272,17 +209,22 @@ class HttpRenderBridge(Star):
     def _validate_headers(self, request: web.Request):
         """验证必需的请求头"""
         # 检查X-Html-Template
-        template_alias = request.headers.get('X-Html-Template')
-        if not template_alias:
+        template_name = request.headers.get('X-Html-Template')
+        if not template_name:
             return web.json_response({
                 'status': 'error',
                 'message': "Header 'X-Html-Template' is missing"
             }, status=400)
         
-        if template_alias not in self.templates_cache:
+        # 如果包含.html后缀，移除它
+        if template_name.endswith('.html'):
+            template_name = template_name[:-5]
+        
+        if template_name not in self.templates_cache:
+            available_templates = list(self.templates_cache.keys())
             return web.json_response({
                 'status': 'error',
-                'message': f"Template '{template_alias}' not found"
+                'message': f"Template '{template_name}' not found. Available templates: {', '.join(available_templates)}"
             }, status=400)
         
         # 检查X-Target-Type
@@ -307,7 +249,7 @@ class HttpRenderBridge(Star):
                 'message': "Header 'X-Target-Id' is missing"
             }, status=400)
         
-        return template_alias, target_type, target_id
+        return template_name, target_type, target_id
 
     async def _parse_form_data(self, request: web.Request):
         """解析multipart/form-data请求体"""

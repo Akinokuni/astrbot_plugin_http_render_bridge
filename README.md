@@ -28,42 +28,34 @@
 
 ### 3. 配置 HTML 模板
 
-插件支持两种模板配置方式：
+插件采用简化的文件化模板管理：
 
-#### 🎨 内置模板文件
+#### 🎨 模板文件管理
 
-插件在 `templates/` 目录下提供了多个预设模板文件：
+插件会自动扫描 `templates/` 目录下的所有 `.html` 文件：
 
-| 模板文件 | 模板别名 | 用途 | 默认启用 |
-|----------|----------|------|----------|
-| `notification.html` | `notification` | 通用通知消息 | ✅ |
-| `alert.html` | `alert` | 警告和错误消息 | ❌ |
-| `success.html` | `success` | 成功和完成消息 | ❌ |
-| `nomination.html` | `nomination` | 提名展示 | ❌ |
-| `report.html` | `report` | 数据报告 | ❌ |
+| 模板文件 | 模板名称 | 用途 |
+|----------|----------|------|
+| `notification.html` | `notification` | 通用通知消息 |
+| `alert.html` | `alert` | 警告和错误消息 |
+| `success.html` | `success` | 成功和完成消息 |
+| `nomination.html` | `nomination` | 提名展示 |
+| `report.html` | `report` | 数据报告 |
+| `default.html` | `default` | 默认模板 |
 
-#### ⚙️ 模板配置
+#### ⚙️ 全局配置
 
-在AstrBot管理面板中，可以为每个模板配置：
-- **启用状态** - 是否启用该模板
-- **渲染宽度** - 生成图片的宽度（像素）
-- **图片质量** - 图片质量等级（low/medium/high/ultra）
+在AstrBot管理面板中配置全局参数：
+- **默认渲染宽度** - 所有模板的默认宽度（像素）
+- **默认图片质量** - 所有模板的默认质量（low/medium/high/ultra）
 
-#### 🛠️ 自定义模板
+#### 🛠️ 添加自定义模板
 
-除了内置模板，还可以通过JSON配置添加自定义模板：
+只需在 `templates/` 目录下添加新的 `.html` 文件即可：
 
-```json
-{
-  "custom_alias": {
-    "name": "自定义模板名称",
-    "description": "模板描述",
-    "html_content": "<!DOCTYPE html>...",
-    "render_width": 800,
-    "render_quality": "high"
-  }
-}
-```
+1. 创建新的HTML文件，如 `custom.html`
+2. 插件会自动检测并加载为 `custom` 模板
+3. 通过API调用时使用 `X-Html-Template: custom`
 
 #### 📝 模板变量
 
@@ -76,11 +68,11 @@
 {{level | default('INFO')}}
 ```
 
-#### 💡 模板管理优势
-- **文件化管理** - 每个模板独立文件，便于版本控制
-- **即插即用** - 内置多种常用模板，开箱即用
-- **灵活配置** - 支持启用/禁用和参数调整
-- **扩展性强** - 支持自定义模板和JSON配置
+#### 💡 简化管理优势
+- **零配置** - 文件存在即可用，无需额外配置
+- **直观命名** - 文件名即模板名，简单明了
+- **热加载** - 重启插件后自动检测新模板
+- **版本控制友好** - 每个模板都是独立的HTML文件
 
 ## API 使用方法
 
@@ -96,6 +88,8 @@ Content-Type: multipart/form-data
 
 title=系统通知&content=这是一条重要通知&timestamp=2024-01-01 12:00:00
 ```
+
+**注意**: `X-Html-Template` 参数直接使用HTML文件名（不含.html后缀）
 
 ### 请求头说明
 

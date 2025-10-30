@@ -18,7 +18,7 @@ def test_template(template_name, data):
     url = f"{BASE_URL}{API_PATH}"
     headers = {
         "Authorization": f"Bearer {AUTH_TOKEN}",
-        "X-Html-Template": template_name,
+        "X-Html-Template": template_name,  # 直接使用文件名（不含.html）
         "X-Target-Type": "group",
         "X-Target-Id": "123456789"
     }

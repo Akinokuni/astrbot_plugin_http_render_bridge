@@ -3,34 +3,6 @@
   "auth_token": "your_secure_token_here_please_change_it",
   "server_host": "0.0.0.0",
   "server_port": 8080,
-  
-  "template_notification_enabled": true,
-  "template_notification_width": 800,
-  "template_notification_quality": "high",
-  
-  "template_alert_enabled": true,
-  "template_alert_width": 800,
-  "template_alert_quality": "high",
-  
-  "template_success_enabled": true,
-  "template_success_width": 800,
-  "template_success_quality": "high",
-  
-  "template_custom1_enabled": true,
-  "template_custom1_alias": "report",
-  "template_custom1_name": "数据报告模板",
-  "template_custom1_width": 900,
-  "template_custom1_quality": "high",
-  
-  "template_custom2_enabled": false,
-  "template_custom2_alias": "custom2",
-  "template_custom2_name": "自定义模板2",
-  "template_custom2_width": 800,
-  "template_custom2_quality": "high",
-  
-  "template_custom3_enabled": false,
-  "template_custom3_alias": "custom3",
-  "template_custom3_name": "自定义模板3",
-  "template_custom3_width": 800,
-  "template_custom3_quality": "high"
+  "render_width": 800,
+  "render_quality": "high"
 }

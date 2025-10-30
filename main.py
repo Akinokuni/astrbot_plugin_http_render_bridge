@@ -32,40 +32,49 @@ class HttpRenderBridge(Star):
         asyncio.create_task(self.start_server())
 
     def _init_default_templates(self):
-        """初始化默认模板到配置中"""
-        default_templates = self.config.get('default_templates', {})
-        current_templates = self.config.get('templates', {})
-        
-        # 合并默认模板到当前模板配置中
-        for alias, template_config in default_templates.items():
-            if alias not in current_templates:
-                current_templates[alias] = template_config
-        
-        self.config['templates'] = current_templates
-        self.config.save_config()
-        
-        # 缓存模板
+        """初始化默认模板"""
         self._reload_templates()
 
     def _reload_templates(self):
         """重新加载模板缓存"""
         self.templates_cache.clear()
-        templates_config = self.config.get('templates', {})
         
-        for alias, template_config in templates_config.items():
-            try:
+        # 加载通知模板
+        if self.config.get('template_notification_enabled', True):
+            html_content = self.config.get('template_notification_html', '')
+            if html_content:
+                try:
+                    self.templates_cache['notification'] = {
+                        'template': Template(html_content),
+                        'render_width': self.config.get('template_notification_width', 800),
+                        'render_quality': self.config.get('template_notification_quality', 'high'),
+                        'name': '通知模板',
+                        'description': '通用通知消息模板'
+                    }
+                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载通知模板")
+                except Exception as e:
+                    logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载通知模板失败: {e}")
+        
+        # 加载自定义模板
+        custom_templates_json = self.config.get('custom_templates', '{}')
+        try:
+            custom_templates = json.loads(custom_templates_json) if custom_templates_json else {}
+            for alias, template_config in custom_templates.items():
                 html_content = template_config.get('html_content', '')
                 if html_content:
-                    self.templates_cache[alias] = {
-                        'template': Template(html_content),
-                        'render_width': template_config.get('render_width', 800),
-                        'render_quality': template_config.get('render_quality', 'high'),
-                        'name': template_config.get('name', alias),
-                        'description': template_config.get('description', '')
-                    }
-                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载模板: {alias} ({template_config.get('name', alias)})")
-            except Exception as e:
-                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载模板 {alias} 失败: {e}")
+                    try:
+                        self.templates_cache[alias] = {
+                            'template': Template(html_content),
+                            'render_width': template_config.get('render_width', 800),
+                            'render_quality': template_config.get('render_quality', 'high'),
+                            'name': template_config.get('name', alias),
+                            'description': template_config.get('description', '')
+                        }
+                        logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载自定义模板: {alias} ({template_config.get('name', alias)})")
+                    except Exception as e:
+                        logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载自定义模板 {alias} 失败: {e}")
+        except json.JSONDecodeError as e:
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 解析自定义模板配置失败: {e}")
 
     async def start_server(self):
         """启动HTTP服务器"""

@@ -103,54 +103,89 @@ class HttpRenderBridge(Star):
 </body>
 </html>'''
         
-        # 加载通知模板
-        if self.config.get('template_notification_enabled', True):
-            html_content = self.config.get('template_notification_html', default_notification_html)
-            try:
-                self.templates_cache['notification'] = {
-                    'template': Template(html_content),
-                    'render_width': self.config.get('template_notification_width', 800),
-                    'render_quality': self.config.get('template_notification_quality', 'high'),
-                    'name': '通知模板',
-                    'description': '通用通知消息模板'
-                }
-                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载通知模板")
-            except Exception as e:
-                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载通知模板失败: {e}")
-        else:
-            # 即使禁用了配置中的模板，也加载默认模板作为后备
+        
+        # 定义所有支持的模板
+        template_configs = [
+            {
+                'alias': 'notification',
+                'name': '通知模板',
+                'description': '通用通知消息模板',
+                'enabled_key': 'template_notification_enabled',
+                'html_key': 'template_notification_html',
+                'width_key': 'template_notification_width',
+                'quality_key': 'template_notification_quality'
+            },
+            {
+                'alias': 'alert',
+                'name': '警告模板',
+                'description': '系统警告和错误消息模板',
+                'enabled_key': 'template_alert_enabled',
+                'html_key': 'template_alert_html',
+                'width_key': 'template_alert_width',
+                'quality_key': 'template_alert_quality'
+            },
+            {
+                'alias': 'success',
+                'name': '成功模板',
+                'description': '操作成功消息模板',
+                'enabled_key': 'template_success_enabled',
+                'html_key': 'template_success_html',
+                'width_key': 'template_success_width',
+                'quality_key': 'template_success_quality'
+            }
+        ]
+        
+        # 加载预定义模板
+        for template_config in template_configs:
+            if self.config.get(template_config['enabled_key'], True):
+                html_content = self.config.get(template_config['html_key'], '')
+                if html_content:
+                    try:
+                        self.templates_cache[template_config['alias']] = {
+                            'template': Template(html_content),
+                            'render_width': self.config.get(template_config['width_key'], 800),
+                            'render_quality': self.config.get(template_config['quality_key'], 'high'),
+                            'name': template_config['name'],
+                            'description': template_config['description']
+                        }
+                        logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载{template_config['name']}")
+                    except Exception as e:
+                        logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载{template_config['name']}失败: {e}")
+        
+        # 加载自定义模板
+        for i in range(1, 4):  # 支持最多3个自定义模板
+            enabled_key = f'template_custom{i}_enabled'
+            if self.config.get(enabled_key, False):
+                alias = self.config.get(f'template_custom{i}_alias', f'custom{i}')
+                name = self.config.get(f'template_custom{i}_name', f'自定义模板{i}')
+                html_content = self.config.get(f'template_custom{i}_html', '')
+                
+                if html_content and alias:
+                    try:
+                        self.templates_cache[alias] = {
+                            'template': Template(html_content),
+                            'render_width': self.config.get(f'template_custom{i}_width', 800),
+                            'render_quality': self.config.get(f'template_custom{i}_quality', 'high'),
+                            'name': name,
+                            'description': f'用户自定义的{name}'
+                        }
+                        logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载自定义模板: {alias} ({name})")
+                    except Exception as e:
+                        logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载自定义模板 {alias} 失败: {e}")
+        
+        # 如果没有加载任何模板，加载一个默认的通知模板作为后备
+        if not self.templates_cache:
             try:
                 self.templates_cache['notification'] = {
                     'template': Template(default_notification_html),
                     'render_width': 800,
                     'render_quality': 'high',
                     'name': '通知模板',
-                    'description': '通用通知消息模板'
+                    'description': '默认通知消息模板'
                 }
                 logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载默认通知模板（后备）")
             except Exception as e:
                 logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载默认通知模板失败: {e}")
-        
-        # 加载自定义模板
-        custom_templates_json = self.config.get('custom_templates', '{}')
-        try:
-            custom_templates = json.loads(custom_templates_json) if custom_templates_json else {}
-            for alias, template_config in custom_templates.items():
-                html_content = template_config.get('html_content', '')
-                if html_content:
-                    try:
-                        self.templates_cache[alias] = {
-                            'template': Template(html_content),
-                            'render_width': template_config.get('render_width', 800),
-                            'render_quality': template_config.get('render_quality', 'high'),
-                            'name': template_config.get('name', alias),
-                            'description': template_config.get('description', '')
-                        }
-                        logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载自定义模板: {alias} ({template_config.get('name', alias)})")
-                    except Exception as e:
-                        logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载自定义模板 {alias} 失败: {e}")
-        except json.JSONDecodeError as e:
-            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 解析自定义模板配置失败: {e}")
 
     async def start_server(self):
         """启动HTTP服务器"""

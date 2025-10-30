@@ -26,33 +26,38 @@
 - **服务地址**: HTTP 服务监听地址（默认：`0.0.0.0:8080`）
 - **HTML模板**: 配置多个模板，每个模板需要唯一的别名
 
-### 3. 创建 HTML 模板
+### 3. 配置 HTML 模板
 
-在插件配置中添加 HTML 模板，支持 Jinja2 语法：
+插件提供了用户友好的配置界面，无需手写JSON配置：
 
+#### 🎨 预设模板
+- **通知模板** (`notification`) - 蓝色渐变背景的通用通知
+- **警告模板** (`alert`) - 红色主题的警告消息  
+- **成功模板** (`success`) - 绿色主题的成功消息
+
+#### 🛠️ 自定义模板
+支持最多3个自定义模板，每个模板独立配置：
+- **启用开关** - 一键启用/禁用模板
+- **别名设置** - API调用时使用的标识符
+- **显示名称** - 管理界面显示的友好名称
+- **HTML编辑** - 完整的HTML/CSS编辑器
+- **渲染设置** - 宽度和质量配置
+
+#### 📝 模板变量
+所有模板都支持以下Jinja2变量：
 ```html
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <style>
-        .notification {
-            background: #f0f8ff;
-            padding: 20px;
-            border-radius: 10px;
-            font-family: Arial, sans-serif;
-        }
-    </style>
-</head>
-<body>
-    <div class="notification">
-        <h2>{{title}}</h2>
-        <p>{{content}}</p>
-        <small>{{timestamp}}</small>
-    </div>
-</body>
-</html>
+{{title | default('默认标题')}}
+{{content | default('默认内容')}}
+{{message | default('默认消息')}}
+{{timestamp | default('刚刚')}}
+{{level | default('INFO')}}
 ```
+
+#### ⚙️ 配置优势
+- **无需编程** - 通过表单界面轻松配置
+- **即时预览** - 每个配置项都有详细说明
+- **灵活控制** - 可以随时启用/禁用任何模板
+- **简单管理** - 不再需要手写复杂的JSON配置
 
 ## API 使用方法
 

@@ -290,25 +290,11 @@ class HttpRenderBridge(Star):
             template = template_info['template']
             html_content = template.render(**data)
             
-            # 直接使用HTML进行本地渲染，保留所有样式
+            # 完全按照http_forwarder的方式进行渲染
             try:
-                # 设置渲染选项
-                render_options = {
-                    'full_page': True,
-                    'type': 'png'
-                }
-                
-                quality = template_info.get('render_quality', 'high')
-                if quality == 'high':
-                    render_options['quality'] = 95
-                elif quality == 'medium':
-                    render_options['quality'] = 75
-                else:
-                    render_options['quality'] = 50
-                
-                # 使用与http_forwarder相同的方式进行渲染
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 尝试渲染HTML为图片")
                 image_url = await self.html_render(html_content, data)
-                logger.info(f"[AstrBot Plugin HTTP Render Bridge] HTML渲染成功: {image_url}")
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] html_render返回URL: {image_url}")
                 return image_url
                 
             except Exception as render_error:
@@ -377,8 +363,23 @@ class HttpRenderBridge(Star):
             
             logger.info(f"[AstrBot Plugin HTTP Render Bridge] 准备发送图片: {image_path}")
             
-            # 构建OneBot v11格式的消息，直接使用渲染返回的结果
-            message_data = [{'type': 'image', 'data': {'file': image_path}}]
+            # 如果是本地文件路径，尝试转换为base64数据URI
+            if not image_path.startswith('http') and os.path.exists(image_path):
+                try:
+                    import base64
+                    with open(image_path, 'rb') as f:
+                        image_data = f.read()
+                    base64_data = base64.b64encode(image_data).decode('utf-8')
+                    file_data = f"base64://{base64_data}"
+                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 转换为base64数据URI，长度: {len(base64_data)}")
+                except Exception as e:
+                    logger.warning(f"[AstrBot Plugin HTTP Render Bridge] base64转换失败，使用原路径: {e}")
+                    file_data = image_path
+            else:
+                file_data = image_path
+            
+            # 构建OneBot v11格式的消息
+            message_data = [{'type': 'image', 'data': {'file': file_data}}]
             
             # 根据目标类型发送消息
             if target_type == 'group':

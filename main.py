@@ -279,7 +279,7 @@ class HttpRenderBridge(Star):
             }, status=400)
 
     async def _render_template_to_image(self, template_alias: str, data: Dict[str, Any]) -> Optional[str]:
-        """渲染模板为图片 - 强制使用本地渲染"""
+        """渲染模板为图片 - 直接使用HTML本地渲染"""
         try:
             template_info = self.templates_cache.get(template_alias)
             if not template_info:
@@ -290,19 +290,38 @@ class HttpRenderBridge(Star):
             template = template_info['template']
             html_content = template.render(**data)
             
-            # 直接使用本地渲染，不再尝试网络渲染
+            # 直接使用HTML进行本地渲染，保留所有样式
             try:
-                # 将HTML转换为Markdown进行本地渲染
-                markdown_content = self._html_to_markdown(html_content, data)
+                # 设置渲染选项
+                render_options = {
+                    'full_page': True,
+                    'type': 'png'
+                }
                 
-                # 使用AstrBot的本地渲染功能
-                image_path = await self.html_render(markdown_content, {}, return_url=False)
-                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 本地渲染成功: {image_path}")
+                quality = template_info.get('render_quality', 'high')
+                if quality == 'high':
+                    render_options['quality'] = 95
+                elif quality == 'medium':
+                    render_options['quality'] = 75
+                else:
+                    render_options['quality'] = 50
+                
+                # 使用AstrBot的HTML渲染功能，直接传入HTML内容
+                image_path = await self.html_render(html_content, {}, return_url=False, options=render_options)
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] HTML本地渲染成功: {image_path}")
                 return image_path
                 
             except Exception as render_error:
-                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 本地渲染失败: {render_error}")
-                return None
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] HTML本地渲染失败: {render_error}")
+                # 如果HTML渲染失败，尝试Markdown作为后备方案
+                try:
+                    markdown_content = self._html_to_markdown(html_content, data)
+                    image_path = await self.html_render(markdown_content, {}, return_url=False)
+                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] Markdown后备渲染成功: {image_path}")
+                    return image_path
+                except Exception as fallback_error:
+                    logger.error(f"[AstrBot Plugin HTTP Render Bridge] Markdown后备渲染也失败: {fallback_error}")
+                    return None
             
         except TemplateError as e:
             logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板渲染错误: {e}")
@@ -312,13 +331,13 @@ class HttpRenderBridge(Star):
             return None
 
     def _html_to_markdown(self, html_content: str, data: Dict[str, Any]) -> str:
-        """将HTML内容转换为Markdown格式，作为本地渲染的后备方案"""
+        """将HTML内容转换为Markdown格式，仅作为HTML渲染失败时的后备方案"""
         # 提取关键数据
         title = data.get('title', '通知')
         content = data.get('content', '这是一条通知消息')
         timestamp = data.get('timestamp', '刚刚')
         
-        # 构建美观的Markdown
+        # 构建美观的Markdown作为后备方案
         markdown = f"""# 📢 {title}
 
 ---
@@ -330,7 +349,7 @@ class HttpRenderBridge(Star):
 🕒 **时间**: {timestamp}
 
 ---
-*由 AstrBot HTTP 渲染桥梁插件生成*"""
+*由 AstrBot HTTP 渲染桥梁插件生成（后备渲染）*"""
         
         return markdown
 

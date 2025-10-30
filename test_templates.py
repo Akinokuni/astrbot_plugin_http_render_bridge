@@ -27,7 +27,9 @@ def test_template(template_name, data):
     print(f"📤 发送数据: {data}")
     
     try:
-        response = requests.post(url, headers=headers, data=data, timeout=30)
+        # 使用files参数来确保multipart/form-data格式
+        files = {key: (None, value) for key, value in data.items()}
+        response = requests.post(url, headers=headers, files=files, timeout=30)
         print(f"📥 响应状态: {response.status_code}")
         print(f"📄 响应内容: {response.text}")
         

@@ -279,7 +279,7 @@ class HttpRenderBridge(Star):
             }, status=400)
 
     async def _render_template_to_image(self, template_alias: str, data: Dict[str, Any]) -> Optional[str]:
-        """渲染模板为图片"""
+        """渲染模板为图片 - 强制使用本地渲染"""
         try:
             template_info = self.templates_cache.get(template_alias)
             if not template_info:
@@ -290,39 +290,19 @@ class HttpRenderBridge(Star):
             template = template_info['template']
             html_content = template.render(**data)
             
-            # 设置渲染选项
-            render_options = {
-                'full_page': True,
-                'type': 'png'
-            }
-            
-            quality = template_info.get('render_quality', 'high')
-            if quality == 'high':
-                render_options['quality'] = 95
-            elif quality == 'medium':
-                render_options['quality'] = 75
-            else:
-                render_options['quality'] = 50
-            
-            # 尝试使用AstrBot的html_render功能
+            # 直接使用本地渲染，不再尝试网络渲染
             try:
-                # 首先尝试网络渲染
-                image_url = await self.html_render(html_content, {}, return_url=True, options=render_options)
-                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 网络渲染成功: {image_url}")
-                return image_url
-            except Exception as network_error:
-                logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 网络渲染失败，尝试本地渲染: {network_error}")
+                # 将HTML转换为Markdown进行本地渲染
+                markdown_content = self._html_to_markdown(html_content, data)
                 
-                # 网络渲染失败，尝试本地渲染
-                try:
-                    # 直接使用本地渲染策略
-                    from astrbot.core import html_renderer
-                    image_path = await html_renderer.local_strategy.render(self._html_to_markdown(html_content, data))
-                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 本地渲染成功: {image_path}")
-                    return image_path
-                except Exception as local_error:
-                    logger.error(f"[AstrBot Plugin HTTP Render Bridge] 本地渲染也失败: {local_error}")
-                    return None
+                # 使用AstrBot的本地渲染功能
+                image_path = await self.html_render(markdown_content, {}, return_url=False)
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 本地渲染成功: {image_path}")
+                return image_path
+                
+            except Exception as render_error:
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 本地渲染失败: {render_error}")
+                return None
             
         except TemplateError as e:
             logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板渲染错误: {e}")

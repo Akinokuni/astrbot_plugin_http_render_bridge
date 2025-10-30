@@ -1,4 +1,4 @@
-name: http_render_bridge
+name: astrbot_plugin_http_render_bridge
 author: Kiro AI Assistant
 description: HTTP渲染桥梁插件 - 将结构化HTTP请求数据动态转化为图片并发送到QQ
 version: 1.0.0

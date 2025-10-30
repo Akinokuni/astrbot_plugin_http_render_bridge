@@ -15,13 +15,13 @@
 ```bash
 # 假设 AstrBot 安装在 /path/to/astrbot
 cd /path/to/astrbot/data/plugins/
-git clone <plugin-repository> http_render_bridge
+git clone <plugin-repository> astrbot_plugin_http_render_bridge
 ```
 
 或者手动创建目录并复制文件：
 
 ```bash
-mkdir -p /path/to/astrbot/data/plugins/http_render_bridge
+mkdir -p /path/to/astrbot/data/plugins/astrbot_plugin_http_render_bridge
 # 复制所有插件文件到该目录
 ```
 
@@ -80,7 +80,7 @@ curl http://localhost:8080/health
 ```json
 {
     "status": "ok",
-    "plugin": "http_render_bridge",
+    "plugin": "astrbot_plugin_http_render_bridge",
     "version": "1.0.0",
     "templates_count": 1,
     "timestamp": "2024-01-01T12:00:00"
@@ -92,7 +92,7 @@ curl http://localhost:8080/health
 使用提供的测试脚本：
 
 ```bash
-cd /path/to/plugin/http_render_bridge
+cd /path/to/plugin/astrbot_plugin_http_render_bridge
 python test_api.py
 ```
 
@@ -237,7 +237,7 @@ server {
 
 ### 日志位置
 
-插件日志会输出到 AstrBot 的日志系统中，标识为 `[HTTP Render Bridge]`。
+插件日志会输出到 AstrBot 的日志系统中，标识为 `[AstrBot Plugin HTTP Render Bridge]`。
 
 ### 监控指标
 
@@ -312,14 +312,14 @@ fi
 
 ```bash
 # 备份插件配置
-cp /path/to/astrbot/data/config/http_render_bridge_config.json backup/
+cp /path/to/astrbot/data/config/astrbot_plugin_http_render_bridge_config.json backup/
 ```
 
 ### 恢复配置
 
 ```bash
 # 恢复插件配置
-cp backup/http_render_bridge_config.json /path/to/astrbot/data/config/
+cp backup/astrbot_plugin_http_render_bridge_config.json /path/to/astrbot/data/config/
 # 重启 AstrBot
 ```
 

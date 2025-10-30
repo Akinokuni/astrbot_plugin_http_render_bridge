@@ -13,7 +13,7 @@ from astrbot.core.config import AstrBotConfig
 
 
 @register(
-    'http_render_bridge',
+    'astrbot_plugin_http_render_bridge',
     'Kiro AI Assistant', 
     'HTTP渲染桥梁插件 - 将结构化HTTP请求数据动态转化为图片并发送到QQ',
     '1.0.0'
@@ -63,9 +63,9 @@ class HttpRenderBridge(Star):
                         'name': template_config.get('name', alias),
                         'description': template_config.get('description', '')
                     }
-                    logger.info(f"[HTTP Render Bridge] 已加载模板: {alias} ({template_config.get('name', alias)})")
+                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载模板: {alias} ({template_config.get('name', alias)})")
             except Exception as e:
-                logger.error(f"[HTTP Render Bridge] 加载模板 {alias} 失败: {e}")
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载模板 {alias} 失败: {e}")
 
     async def start_server(self):
         """启动HTTP服务器"""
@@ -88,16 +88,16 @@ class HttpRenderBridge(Star):
             site = web.TCPSite(self.runner, host, port)
             await site.start()
             
-            logger.info(f"[HTTP Render Bridge] 服务器已启动: http://{host}:{port}{api_path}")
+            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 服务器已启动: http://{host}:{port}{api_path}")
             
         except Exception as e:
-            logger.error(f"[HTTP Render Bridge] 启动服务器失败: {e}")
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 启动服务器失败: {e}")
 
     async def health_handler(self, request: web.Request):
         """健康检查处理器"""
         return web.json_response({
             'status': 'ok',
-            'plugin': 'http_render_bridge',
+            'plugin': 'astrbot_plugin_http_render_bridge',
             'version': '1.0.0',
             'templates_count': len(self.templates_cache),
             'timestamp': datetime.now().isoformat()
@@ -147,7 +147,7 @@ class HttpRenderBridge(Star):
             })
             
         except Exception as e:
-            logger.error(f"[HTTP Render Bridge] 处理请求时发生错误: {e}")
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 处理请求时发生错误: {e}")
             return web.json_response({
                 'status': 'error',
                 'message': 'Internal server error'
@@ -163,7 +163,7 @@ class HttpRenderBridge(Star):
         expected_header = f"Bearer {auth_token}"
         
         if auth_header != expected_header:
-            logger.warning(f"[HTTP Render Bridge] 认证失败: {auth_header}")
+            logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 认证失败: {auth_header}")
             return web.json_response({
                 'status': 'error',
                 'message': 'Unauthorized'
@@ -228,11 +228,11 @@ class HttpRenderBridge(Star):
                     value = await field.text()
                     form_data[field.name] = value
             
-            logger.info(f"[HTTP Render Bridge] 解析到表单数据: {list(form_data.keys())}")
+            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 解析到表单数据: {list(form_data.keys())}")
             return form_data
             
         except Exception as e:
-            logger.error(f"[HTTP Render Bridge] 解析表单数据失败: {e}")
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 解析表单数据失败: {e}")
             return web.json_response({
                 'status': 'error',
                 'message': 'Failed to parse form data'
@@ -243,7 +243,7 @@ class HttpRenderBridge(Star):
         try:
             template_info = self.templates_cache.get(template_alias)
             if not template_info:
-                logger.error(f"[HTTP Render Bridge] 模板 {template_alias} 不存在")
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板 {template_alias} 不存在")
                 return None
             
             # 渲染HTML
@@ -267,14 +267,14 @@ class HttpRenderBridge(Star):
             # 使用AstrBot的html_render功能
             image_url = await self.html_render(html_content, {}, options=render_options)
             
-            logger.info(f"[HTTP Render Bridge] 成功渲染模板 {template_alias} 为图片: {image_url}")
+            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 成功渲染模板 {template_alias} 为图片: {image_url}")
             return image_url
             
         except TemplateError as e:
-            logger.error(f"[HTTP Render Bridge] 模板渲染错误: {e}")
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板渲染错误: {e}")
             return None
         except Exception as e:
-            logger.error(f"[HTTP Render Bridge] 渲染图片时发生错误: {e}")
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 渲染图片时发生错误: {e}")
             return None
 
     async def _send_message(self, target_type: str, target_id: str, image_url: str) -> bool:
@@ -296,15 +296,15 @@ class HttpRenderBridge(Star):
             # 发送消息
             await self.context.send_message(unified_msg_origin, message_chain)
             
-            logger.info(f"[HTTP Render Bridge] 成功发送图片到 {target_type}:{target_id}")
+            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 成功发送图片到 {target_type}:{target_id}")
             return True
             
         except Exception as e:
-            logger.error(f"[HTTP Render Bridge] 发送消息失败: {e}")
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 发送消息失败: {e}")
             return False
 
     async def terminate(self):
         """插件终止时的清理工作"""
         if self.runner:
             await self.runner.cleanup()
-            logger.info("[HTTP Render Bridge] HTTP服务器已停止")
+            logger.info("[AstrBot Plugin HTTP Render Bridge] HTTP服务器已停止")

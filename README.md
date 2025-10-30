@@ -15,7 +15,7 @@
 
 ### 1. 安装插件
 
-将插件文件放置到 AstrBot 的 `data/plugins/http_render_bridge/` 目录下。
+将插件文件放置到 AstrBot 的 `data/plugins/astrbot_plugin_http_render_bridge/` 目录下。
 
 ### 2. 配置插件
 
@@ -176,7 +176,7 @@ GET /health
 ```json
 {
     "status": "ok",
-    "plugin": "http_render_bridge",
+    "plugin": "astrbot_plugin_http_render_bridge",
     "version": "1.0.0",
     "templates_count": 3,
     "timestamp": "2024-01-01T12:00:00"
@@ -201,7 +201,7 @@ GET /health
 
 ### 日志查看
 
-插件会在 AstrBot 日志中输出详细的运行信息，标识为 `[HTTP Render Bridge]`。
+插件会在 AstrBot 日志中输出详细的运行信息，标识为 `[AstrBot Plugin HTTP Render Bridge]`。
 
 ## 版本历史
 

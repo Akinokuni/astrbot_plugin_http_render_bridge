@@ -1,0 +1,86 @@
+{
+  "api_path": {
+    "description": "API接口路径",
+    "type": "string",
+    "default": "/api/render/image",
+    "hint": "自定义API访问路径，例如：/api/render/image"
+  },
+  "auth_token": {
+    "description": "认证令牌",
+    "type": "string",
+    "default": "",
+    "hint": "用于Bearer Token认证的密钥，建议使用强密码",
+    "obvious_hint": true
+  },
+  "server_host": {
+    "description": "服务监听地址",
+    "type": "string",
+    "default": "0.0.0.0",
+    "hint": "HTTP服务器监听的IP地址"
+  },
+  "server_port": {
+    "description": "服务端口",
+    "type": "int",
+    "default": 8080,
+    "hint": "HTTP服务器监听的端口号"
+  },
+  "templates": {
+    "description": "HTML模板配置",
+    "type": "object",
+    "hint": "管理多个HTML模板，每个模板有唯一的别名",
+    "default": {},
+    "items": {
+      "alias": {
+        "description": "模板别名",
+        "type": "string",
+        "hint": "模板的唯一标识符，用于API请求中的X-Html-Template头"
+      },
+      "name": {
+        "description": "模板名称",
+        "type": "string",
+        "hint": "模板的显示名称"
+      },
+      "description": {
+        "description": "模板描述",
+        "type": "string",
+        "hint": "模板用途说明"
+      },
+      "html_content": {
+        "description": "HTML模板内容",
+        "type": "text",
+        "hint": "支持Jinja2语法的HTML模板，使用{{变量名}}作为占位符",
+        "editor_mode": true,
+        "editor_language": "html"
+      },
+      "render_width": {
+        "description": "渲染宽度(px)",
+        "type": "int",
+        "default": 800,
+        "hint": "生成图片的宽度，高度自适应"
+      },
+      "render_quality": {
+        "description": "图片质量",
+        "type": "string",
+        "default": "high",
+        "options": ["high", "medium", "low"],
+        "hint": "图片压缩质量等级"
+      }
+    }
+  },
+  "default_templates": {
+    "description": "默认模板",
+    "type": "object",
+    "hint": "系统预设的默认模板",
+    "invisible": true,
+    "default": {
+      "notification": {
+        "alias": "notification",
+        "name": "通知模板",
+        "description": "通用通知消息模板",
+        "html_content": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <style>\n        body {\n            font-family: 'Microsoft YaHei', sans-serif;\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            margin: 0;\n            padding: 20px;\n            min-height: 100vh;\n            display: flex;\n            align-items: center;\n            justify-content: center;\n        }\n        .card {\n            background: white;\n            border-radius: 15px;\n            padding: 30px;\n            box-shadow: 0 10px 30px rgba(0,0,0,0.2);\n            max-width: 600px;\n            width: 100%;\n        }\n        .title {\n            font-size: 24px;\n            font-weight: bold;\n            color: #333;\n            margin-bottom: 20px;\n            text-align: center;\n        }\n        .content {\n            font-size: 16px;\n            color: #666;\n            line-height: 1.6;\n            margin-bottom: 20px;\n        }\n        .footer {\n            font-size: 12px;\n            color: #999;\n            text-align: center;\n            border-top: 1px solid #eee;\n            padding-top: 15px;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"card\">\n        <div class=\"title\">{{title | default('通知')}}</div>\n        <div class=\"content\">{{content | default('这是一条通知消息')}}</div>\n        <div class=\"footer\">{{timestamp | default('刚刚')}}</div>\n    </div>\n</body>\n</html>",
+        "render_width": 800,
+        "render_quality": "high"
+      }
+    }
+  }
+}

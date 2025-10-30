@@ -1,0 +1,4 @@
+name: http_image_forwarder
+author: Gemini
+description: A plugin to forward messages from HTTP requests to a specified chat group, rendering text as images.
+version: 1.1.0

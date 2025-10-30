@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+        body {
+            font-family: "LXGWWenKai-Regular", 'Noto Sans SC', sans-serif;
+            font-size: 22px;
+            color: #222;
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+            padding: 40px 36px 32px 36px;
+            width: auto;
+            min-width: 260px;
+            max-width: 90vw;
+            display: inline-block;
+            /* animation: fadeIn 1s; */ /* 移除动画 */
+        }
+        /* @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(40px);}
+            to { opacity: 1; transform: translateY(0);}
+        } */
+        .header {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #3a7bd5;
+            margin-bottom: 28px;
+            text-align: left; /* 由 center 改为 left */
+            letter-spacing: 2px;
+            text-shadow: 0 2px 8px #e0eafc;
+            word-break: break-all;
+        }
+        .section {
+            margin-bottom: 22px;
+            padding: 18px 0 0 0;
+            border-radius: 10px;
+            transition: background 0.3s;
+            word-break: break-all;
+        }
+        .section:hover {
+            background: #f4f8fb;
+        }
+        .label {
+            font-weight: bold;
+            color: #4a6fa5;
+            font-size: 1.05em;
+            letter-spacing: 1px;
+        }
+        .value {
+            margin-left: 10px;
+            color: #222;
+            word-break: break-all;
+        }
+        .separator {
+            border-top: 1.5px dashed #b5c6e0;
+            margin: 18px 0 0 0;
+        }
+        @media (max-width: 600px) {
+            .card {
+                padding: 18px 6vw 18px 6vw;
+                min-width: unset;
+                max-width: 98vw;
+            }
+            .header {
+                font-size: 1.3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">十二🥥器：提名</div>
+        <div class="section">
+            <span class="label">昵称:</span> <span class="value"><strong>{{ name }}</strong></span>
+        </div>
+        <div class="separator"></div>
+        <div class="section">
+            <span class="label">提名一:</span> <span class="value"><strong>{{ title1 }}</strong></span><br>
+            <span class="label">推荐语:</span> <span class="value">{{ evaluate1 }}</span>
+        </div>
+        <div class="separator"></div>
+        <div class="section">
+            <span class="label">提名二:</span> <span class="value"><strong>{{ title2 }}</strong></span><br>
+            <span class="label">推荐语:</span> <span class="value">{{ evaluate2 }}</span>
+        </div>
+        <div class="separator"></div>
+        <div class="section">
+            <span class="label">提名三:</span> <span class="value"><strong>{{ title3 }}</strong></span><br>
+            <span class="label">推荐语:</span> <span class="value">{{ evaluate3 }}</span>
+        </div>
+    </div>
+    <!-- 二维码区域开始 -->
+    <div style="
+        position: fixed;
+        right: 24px;
+        top: 24px;
+        z-index: 999;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(31,38,135,0.10);
+        padding: 10px;
+        ">
+        <img src="data:image/png;base64,{{ qr_code_base64 }}"
+             alt="二维码"
+             width="120"
+             height="120"
+             style="display:block;">
+        <div style="font-size:12px;color:#888;text-align:center;margin-top:4px;">扫码参与提名</div>
+    </div>
+    <!-- 二维码区域结束 -->
+</body>
+</html>

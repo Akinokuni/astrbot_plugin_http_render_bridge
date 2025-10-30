@@ -1,15 +1,44 @@
 import asyncio
+import base64
 import json
 import os
 from datetime import datetime
 from typing import Optional, Dict, Any
+from urllib.parse import quote
 
+import aiohttp
 from aiohttp import web, MultipartReader
 from jinja2 import Template, TemplateError
 
 from astrbot.api import logger
 from astrbot.api.star import Context, Star, register
 from astrbot.core.config import AstrBotConfig
+
+
+async def fetch_qr_code_as_base64(url: str) -> str:
+    """从在线API获取二维码的base64编码（参考http_forwarder项目）"""
+    try:
+        # 构建二维码API URL
+        encoded_url = quote(url, safe='')
+        qr_api_url = f"https://api.2dcode.biz/v1/create-qr-code?data={encoded_url}"
+        
+        async with aiohttp.ClientSession() as session:
+            # 添加超时防止挂起
+            async with session.get(qr_api_url, timeout=10) as response:
+                response.raise_for_status()
+                image_data = await response.read()
+                encoded_image = base64.b64encode(image_data).decode('utf-8')
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 二维码Base64字符串长度: {len(encoded_image)}")
+                return encoded_image
+    except aiohttp.ClientError as e:
+        logger.error(f"[AstrBot Plugin HTTP Render Bridge] 从 {url} 获取二维码时网络错误: {e}")
+        return ""
+    except asyncio.TimeoutError:
+        logger.error(f"[AstrBot Plugin HTTP Render Bridge] 从 {url} 获取二维码超时")
+        return ""
+    except Exception as e:
+        logger.error(f"[AstrBot Plugin HTTP Render Bridge] 从 {url} 获取二维码时发生意外错误: {e}")
+        return ""
 
 
 @register(
@@ -286,9 +315,27 @@ class HttpRenderBridge(Star):
                 logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板 {template_alias} 不存在")
                 return None
             
+            # 处理二维码生成
+            render_data = data.copy()
+            
+            # 如果传入了link参数，自动生成二维码
+            if 'link' in data and data['link']:
+                link_url = data['link']
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 检测到link参数，生成二维码: {link_url}")
+                
+                qr_base64 = await fetch_qr_code_as_base64(link_url)
+                if qr_base64:
+                    render_data['qr_code_base64'] = qr_base64
+                    # 如果没有提供qr_text，使用默认文本
+                    if 'qr_text' not in render_data:
+                        render_data['qr_text'] = '扫码访问链接'
+                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 二维码生成成功，已添加到渲染数据")
+                else:
+                    logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 二维码生成失败，将不显示二维码")
+            
             # 渲染HTML
             template = template_info['template']
-            html_content = template.render(**data)
+            html_content = template.render(**render_data)
             
             # 完全按照http_forwarder的方式进行渲染
             try:

@@ -41,6 +41,27 @@
             border-top: 1px solid #eee;
             padding-top: 15px;
         }
+        .qr-container {
+            position: fixed;
+            right: 24px;
+            top: 24px;
+            z-index: 999;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(31,38,135,0.10);
+            padding: 10px;
+        }
+        .qr-image {
+            display: block;
+            width: 120px;
+            height: 120px;
+        }
+        .qr-text {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -49,5 +70,13 @@
         <div class="content">{{content | default('这是一条通知消息')}}</div>
         <div class="footer">{{timestamp | default('刚刚')}}</div>
     </div>
+    {% if qr_code_base64 %}
+    <div class="qr-container">
+        <img src="data:image/png;base64,{{ qr_code_base64 }}"
+             alt="二维码"
+             class="qr-image">
+        <div class="qr-text">{{ qr_text | default('扫码访问链接') }}</div>
+    </div>
+    {% endif %}
 </body>
 </html>

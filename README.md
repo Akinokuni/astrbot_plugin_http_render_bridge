@@ -23,7 +23,7 @@
 
 - **API接口路径**: 自定义 API 访问路径（默认：`/api/render/image`）
 - **认证令牌**: 设置 Bearer Token（建议使用强密码）
-- **服务地址**: HTTP 服务监听地址（默认：`0.0.0.0:8080`）
+- **服务地址**: HTTP 服务监听地址（默认：`0.0.0.0:11451`）
 - **HTML模板**: 配置多个模板，每个模板需要唯一的别名
 
 ### 3. 配置 HTML 模板
@@ -140,7 +140,7 @@ title=系统通知&content=这是一条重要通知&timestamp=2024-01-01 12:00:0
 ```python
 import requests
 
-url = "http://localhost:8080/api/render/image"
+url = "http://localhost:11451/api/render/image"
 headers = {
     "Authorization": "Bearer your_token_here",
     "X-Html-Template": "notification",
@@ -160,7 +160,7 @@ print(response.json())
 ### curl 示例
 
 ```bash
-curl -X POST http://localhost:8080/api/render/image \
+curl -X POST http://localhost:11451/api/render/image \
   -H "Authorization: Bearer your_token_here" \
   -H "X-Html-Template: notification" \
   -H "X-Target-Type: group" \
@@ -200,7 +200,19 @@ GET /health
     "status": "ok",
     "plugin": "astrbot_plugin_http_render_bridge",
     "version": "1.0.0",
-    "templates_count": 3,
+    "templates_count": 6,
+    "available_templates": [
+        {
+            "name": "notification",
+            "file": "notification.html",
+            "description": "基于notification.html的模板"
+        },
+        {
+            "name": "alert",
+            "file": "alert.html", 
+            "description": "基于alert.html的模板"
+        }
+    ],
     "timestamp": "2024-01-01T12:00:00"
 }
 ```

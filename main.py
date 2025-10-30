@@ -109,7 +109,7 @@ class HttpRenderBridge(Star):
             await self.runner.setup()
             
             host = self.config.get('server_host', '0.0.0.0')
-            port = self.config.get('server_port', 8080)
+            port = self.config.get('server_port', 11451)
             
             site = web.TCPSite(self.runner, host, port)
             await site.start()

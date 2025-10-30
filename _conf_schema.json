@@ -17,7 +17,7 @@
     "server_port": {
         "description": "服务端口",
         "type": "int",
-        "default": 8080
+        "default": 11451
     },
     "render_width": {
         "description": "默认渲染宽度 (像素)",

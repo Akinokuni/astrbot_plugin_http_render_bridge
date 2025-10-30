@@ -9,7 +9,7 @@ import requests
 import json
 
 # 测试配置
-BASE_URL = "http://localhost:8080"
+BASE_URL = "http://localhost:11451"
 API_PATH = "/api/render/image"
 AUTH_TOKEN = "test_token_123"  # 请根据实际配置修改
 

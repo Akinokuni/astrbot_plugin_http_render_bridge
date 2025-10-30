@@ -14,8 +14,8 @@ from astrbot.core.config import AstrBotConfig
 
 @register(
     'astrbot_plugin_http_render_bridge',
-    'Kiro AI Assistant', 
-    'HTTP渲染桥梁插件 - 将结构化HTTP请求数据动态转化为图片并发送到QQ',
+    'Kiro AI Assistant',
+    'HTTP Render Bridge Plugin',
     '1.0.0'
 )
 class HttpRenderBridge(Star):
@@ -25,11 +25,15 @@ class HttpRenderBridge(Star):
         self.runner: Optional[web.AppRunner] = None
         self.templates_cache: Dict[str, Dict[str, Any]] = {}
         
+        logger.info("[AstrBot Plugin HTTP Render Bridge] 插件初始化开始")
+        
         # 初始化默认模板
         self._init_default_templates()
         
         # 启动HTTP服务器
         asyncio.create_task(self.start_server())
+        
+        logger.info("[AstrBot Plugin HTTP Render Bridge] 插件初始化完成")
 
     def _init_default_templates(self):
         """初始化默认模板"""

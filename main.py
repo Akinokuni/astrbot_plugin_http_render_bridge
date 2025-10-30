@@ -81,9 +81,7 @@ class HttpRenderBridge(Star):
         plugin_dir = os.path.dirname(os.path.abspath(__file__))
         templates_dir = os.path.join(plugin_dir, 'templates')
         
-        # 获取默认配置
-        default_width = self.config.get('render_width', 800)
-        default_quality = self.config.get('render_quality', 'high')
+        # 注意：render_width和render_quality参数已移除，因为AstrBot的html_render方法不支持这些选项
         
         # 自动扫描templates目录下的所有HTML文件
         if os.path.exists(templates_dir):
@@ -99,8 +97,6 @@ class HttpRenderBridge(Star):
                             
                             self.templates_cache[template_name] = {
                                 'template': Template(html_content),
-                                'render_width': default_width,
-                                'render_quality': default_quality,
                                 'name': f'{template_name.title()}模板',
                                 'description': f'基于{filename}的模板',
                                 'file': filename

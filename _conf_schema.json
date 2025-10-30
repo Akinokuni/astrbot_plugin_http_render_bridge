@@ -5,28 +5,18 @@
         "default": "/api/render/image"
     },
     "auth_token": {
-        "description": "认证令牌",
+        "description": "认证令牌 (可选，用于API安全认证)",
         "type": "string",
         "default": ""
     },
     "server_host": {
-        "description": "服务监听地址",
+        "description": "HTTP服务监听地址",
         "type": "string",
         "default": "0.0.0.0"
     },
     "server_port": {
-        "description": "服务端口",
+        "description": "HTTP服务端口",
         "type": "int",
         "default": 11451
-    },
-    "render_width": {
-        "description": "默认渲染宽度 (像素)",
-        "type": "int",
-        "default": 800
-    },
-    "render_quality": {
-        "description": "默认图片质量 (low/medium/high/ultra)",
-        "type": "string",
-        "default": "high"
     }
 }

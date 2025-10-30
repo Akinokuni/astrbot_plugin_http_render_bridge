@@ -2,7 +2,5 @@
   "api_path": "/api/render/image",
   "auth_token": "",
   "server_host": "0.0.0.0",
-  "server_port": 11451,
-  "render_width": 800,
-  "render_quality": "high"
+  "server_port": 11451
 }

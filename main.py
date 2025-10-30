@@ -306,19 +306,10 @@ class HttpRenderBridge(Star):
                 else:
                     render_options['quality'] = 50
                 
-                # 强制使用本地渲染，跳过网络渲染
-                try:
-                    # 尝试直接调用本地渲染策略
-                    from astrbot.core.t2i.local_strategy import LocalStrategy
-                    local_renderer = LocalStrategy()
-                    image_path = await local_renderer.render(html_content)
-                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 强制本地渲染成功: {image_path}")
-                    return image_path
-                except ImportError:
-                    # 如果无法直接导入本地策略，使用原方法但设置强制本地渲染
-                    image_path = await self.html_render(html_content, {}, return_url=False, options=render_options)
-                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] HTML本地渲染成功: {image_path}")
-                    return image_path
+                # 使用与http_forwarder相同的方式进行渲染
+                image_url = await self.html_render(html_content, data)
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] HTML渲染成功: {image_url}")
+                return image_url
                 
             except Exception as render_error:
                 logger.error(f"[AstrBot Plugin HTTP Render Bridge] HTML本地渲染失败: {render_error}")
@@ -379,25 +370,15 @@ class HttpRenderBridge(Star):
                 logger.error(f"[AstrBot Plugin HTTP Render Bridge] 平台客户端不可用")
                 return False
             
-            # 准备消息数据
-            if image_path.startswith('http'):
-                # 网络URL
-                file_data = image_path
-            else:
-                # 检查文件是否存在
-                if not os.path.exists(image_path):
-                    logger.error(f"[AstrBot Plugin HTTP Render Bridge] 图片文件不存在: {image_path}")
-                    return False
-                
-                # 获取绝对路径
-                abs_path = os.path.abspath(image_path)
-                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 图片文件路径: {abs_path}")
-                
-                # 尝试直接使用绝对路径，如果失败再尝试file://格式
-                file_data = abs_path
+            # 检查渲染结果
+            if not image_path:
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 渲染返回空结果")
+                return False
             
-            # 构建OneBot v11格式的消息
-            message_data = [{'type': 'image', 'data': {'file': file_data}}]
+            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 准备发送图片: {image_path}")
+            
+            # 构建OneBot v11格式的消息，直接使用渲染返回的结果
+            message_data = [{'type': 'image', 'data': {'file': image_path}}]
             
             # 根据目标类型发送消息
             if target_type == 'group':

@@ -1,4 +1,116 @@
 <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+        @import url("https://fontsapi.zeoseven.com/147/main/result.css");
+
+        /* 1. 重置和基础样式 - 日式现代简约 */
+        body {
+            margin: 0;
+            background-color: #f4f6f8;
+            background-image: url("https://transparenttextures.com/patterns/crissxcross.png");
+            font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            font-size: 16px; 
+            color: #333333;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* 2. 布局样式 - 强调空间感 */
+        .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        /* 3. 组件样式 - 精致与质感 */
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+            padding: 40px 45px;
+            width: 100%;
+            max-width: 680px;
+            box-sizing: border-box;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+        .card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.09);
+        }
+
+        .header {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #4a6fa5;
+            margin: 0 0 30px 0;
+            border-bottom: 2px solid #4a6fa5;
+            padding-bottom: 20px;
+            word-break: break-all;
+        }
+        
+        .user-section {
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .nomination-item {
+            padding: 25px 0;
+            margin: 0;
+            border-bottom: 1px solid #eaeef2;
+        }
+
+        .nomination-item:last-of-type {
+            border-bottom: none;
+            padding-bottom: 10px;
+        }
+        
+        .label {
+            font-weight: 700;
+            color: #4a6fa5;
+            font-size: 1.1em;
+            margin-right: 12px;
+            display: inline-block;
+            min-width: 70px;
+        }
+
+        .value {
+            color: #333;
+            word-break: break-all;
+            line-height: 1.7;
+        }
+
+        .title-value {
+             font-weight: 700;
+             font-size: 1.2em;
+        }
+        
+        .evaluate-block {
+            margin-top: 15px;
+            display: flex;
+        }
+
+        .evaluate-value {
+            font-family: "JiangChengLvDongSong", sans-serif;
+            font-weight: normal;
+            font-size: 1.1em;
+            color: #555555;
+            flex-grow: 1;
+        }
+
+        /* 二维码样式 - 保持简洁 */
+        .qr-container {
+            position: fixed; right: 24px; top: 24px; z-index: 999;
+            background: #fff; border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(31,38,135,0.1);
             padding: 10px; border: 1px solid #e0e0e0;
         }
         .qr-image { display: block; width: 120px; height: 120px; }
@@ -16,7 +128,7 @@
 <body>
     <div class="container">
         <div class="card">
-            <div class="header">{{header | default('十二🥥器：提名')}}</div>
+            <div class="header">{{header | default('月度推荐')}}</div>
             
             <div class="user-section">
                 <span class="label">推荐人:</span>

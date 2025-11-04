@@ -206,26 +206,46 @@ class HttpRenderBridge(Star):
         })
 
     async def render_handler(self, request: web.Request):
-        """主要的渲染处理器"""
+        """主要的消息处理器 - 支持HTML模板渲染和直接消息发送"""
         try:
             # 1. 认证检查
             auth_result = self._check_authentication(request)
             if auth_result:
                 return auth_result
             
-            # 2. 验证请求头
+            # 2. 检查消息类型
+            message_type = request.headers.get('X-Message-Type', 'template')
+            
+            if message_type == 'template':
+                # 传统的HTML模板渲染模式
+                return await self._handle_template_render(request)
+            else:
+                # 直接消息发送模式
+                return await self._handle_direct_message(request, message_type)
+            
+        except Exception as e:
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 处理请求时发生错误: {e}")
+            return web.json_response({
+                'status': 'error',
+                'message': 'Internal server error'
+            }, status=500)
+
+    async def _handle_template_render(self, request: web.Request):
+        """处理HTML模板渲染请求"""
+        try:
+            # 验证请求头
             headers_result = self._validate_headers(request)
             if isinstance(headers_result, web.Response):
                 return headers_result
             
             template_alias, target_type, target_id = headers_result
             
-            # 3. 解析请求体
+            # 解析请求体
             form_data = await self._parse_form_data(request)
             if isinstance(form_data, web.Response):
                 return form_data
             
-            # 4. 渲染图片
+            # 渲染图片
             image_url = await self._render_template_to_image(template_alias, form_data)
             if not image_url:
                 return web.json_response({
@@ -233,7 +253,7 @@ class HttpRenderBridge(Star):
                     'message': 'Failed to render template to image'
                 }, status=500)
             
-            # 5. 发送消息
+            # 发送消息
             send_result = await self._send_message(target_type, target_id, image_url)
             if not send_result:
                 return web.json_response({
@@ -249,10 +269,64 @@ class HttpRenderBridge(Star):
             })
             
         except Exception as e:
-            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 处理请求时发生错误: {e}")
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板渲染处理失败: {e}")
             return web.json_response({
                 'status': 'error',
-                'message': 'Internal server error'
+                'message': 'Template render failed'
+            }, status=500)
+
+    async def _handle_direct_message(self, request: web.Request, message_type: str):
+        """处理直接消息发送请求"""
+        try:
+            # 验证基本请求头（不需要模板）
+            target_type = request.headers.get('X-Target-Type')
+            target_id = request.headers.get('X-Target-Id')
+            
+            if not target_type or not target_id:
+                return web.json_response({
+                    'status': 'error',
+                    'message': 'Missing X-Target-Type or X-Target-Id header'
+                }, status=400)
+            
+            if target_type not in ['group', 'private']:
+                return web.json_response({
+                    'status': 'error',
+                    'message': "X-Target-Type must be 'group' or 'private'"
+                }, status=400)
+            
+            # 解析请求体
+            form_data = await self._parse_form_data(request)
+            if isinstance(form_data, web.Response):
+                return form_data
+            
+            # 构建消息内容
+            message_content = await self._build_message_content(message_type, form_data)
+            if not message_content:
+                return web.json_response({
+                    'status': 'error',
+                    'message': f'Failed to build message content for type: {message_type}'
+                }, status=400)
+            
+            # 发送消息
+            send_result = await self._send_direct_message(target_type, target_id, message_content)
+            if not send_result:
+                return web.json_response({
+                    'status': 'error',
+                    'message': 'Failed to send message to target'
+                }, status=500)
+            
+            return web.json_response({
+                'status': 'success',
+                'message': f'{message_type.title()} message sent successfully',
+                'message_type': message_type,
+                'target': f"{target_type}:{target_id}"
+            })
+            
+        except Exception as e:
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 直接消息处理失败: {e}")
+            return web.json_response({
+                'status': 'error',
+                'message': 'Direct message failed'
             }, status=500)
 
     def _check_authentication(self, request: web.Request) -> Optional[web.Response]:
@@ -492,6 +566,207 @@ class HttpRenderBridge(Star):
             
         except Exception as e:
             logger.error(f"[AstrBot Plugin HTTP Render Bridge] 发送消息失败: {e}")
+            return False
+
+    async def _build_message_content(self, message_type: str, form_data: Dict[str, Any]):
+        """根据消息类型构建消息内容"""
+        try:
+            if message_type == 'text':
+                # 纯文本消息
+                text = form_data.get('text', form_data.get('content', ''))
+                if not text:
+                    return None
+                return [{'type': 'text', 'data': {'text': text}}]
+            
+            elif message_type == 'image':
+                # 图片消息
+                if 'image' in form_data:
+                    return [{'type': 'image', 'data': {'file': form_data['image']}}]
+                elif 'url' in form_data:
+                    return [{'type': 'image', 'data': {'file': form_data['url']}}]
+                return None
+            
+            elif message_type == 'voice':
+                # 语音消息
+                if 'voice' in form_data:
+                    return [{'type': 'record', 'data': {'file': form_data['voice']}}]
+                elif 'url' in form_data:
+                    return [{'type': 'record', 'data': {'file': form_data['url']}}]
+                return None
+            
+            elif message_type == 'video':
+                # 视频消息
+                if 'video' in form_data:
+                    return [{'type': 'video', 'data': {'file': form_data['video']}}]
+                elif 'url' in form_data:
+                    return [{'type': 'video', 'data': {'file': form_data['url']}}]
+                return None
+            
+            elif message_type == 'at':
+                # @消息
+                text = form_data.get('text', '')
+                qq = form_data.get('qq', form_data.get('user_id', ''))
+                if not qq:
+                    return None
+                
+                message = []
+                if qq == 'all':
+                    message.append({'type': 'at', 'data': {'qq': 'all'}})
+                else:
+                    message.append({'type': 'at', 'data': {'qq': str(qq)}})
+                
+                if text:
+                    message.append({'type': 'text', 'data': {'text': f' {text}'}})
+                
+                return message
+            
+            elif message_type == 'reply':
+                # 回复消息
+                message_id = form_data.get('message_id', form_data.get('id', ''))
+                text = form_data.get('text', form_data.get('content', ''))
+                
+                if not message_id:
+                    return None
+                
+                message = [{'type': 'reply', 'data': {'id': str(message_id)}}]
+                if text:
+                    message.append({'type': 'text', 'data': {'text': text}})
+                
+                return message
+            
+            elif message_type == 'forward':
+                # 转发消息
+                message_id = form_data.get('message_id', form_data.get('id', ''))
+                if not message_id:
+                    return None
+                return [{'type': 'forward', 'data': {'id': str(message_id)}}]
+            
+            elif message_type == 'face':
+                # 表情消息
+                face_id = form_data.get('face_id', form_data.get('id', ''))
+                if not face_id:
+                    return None
+                return [{'type': 'face', 'data': {'id': str(face_id)}}]
+            
+            elif message_type == 'poke':
+                # 戳一戳
+                qq = form_data.get('qq', form_data.get('user_id', ''))
+                if not qq:
+                    return None
+                return [{'type': 'poke', 'data': {'qq': str(qq)}}]
+            
+            elif message_type == 'shake':
+                # 窗口抖动
+                return [{'type': 'shake', 'data': {}}]
+            
+            elif message_type == 'music':
+                # 音乐分享
+                music_type = form_data.get('type', '163')  # 默认网易云音乐
+                music_id = form_data.get('id', '')
+                if not music_id:
+                    return None
+                return [{'type': 'music', 'data': {'type': music_type, 'id': str(music_id)}}]
+            
+            elif message_type == 'share':
+                # 链接分享
+                url = form_data.get('url', '')
+                title = form_data.get('title', '')
+                content = form_data.get('content', form_data.get('description', ''))
+                image = form_data.get('image', '')
+                
+                if not url:
+                    return None
+                
+                share_data = {'url': url}
+                if title:
+                    share_data['title'] = title
+                if content:
+                    share_data['content'] = content
+                if image:
+                    share_data['image'] = image
+                
+                return [{'type': 'share', 'data': share_data}]
+            
+            elif message_type == 'location':
+                # 位置分享
+                lat = form_data.get('lat', form_data.get('latitude', ''))
+                lon = form_data.get('lon', form_data.get('longitude', ''))
+                title = form_data.get('title', '')
+                content = form_data.get('content', form_data.get('address', ''))
+                
+                if not lat or not lon:
+                    return None
+                
+                location_data = {'lat': str(lat), 'lon': str(lon)}
+                if title:
+                    location_data['title'] = title
+                if content:
+                    location_data['content'] = content
+                
+                return [{'type': 'location', 'data': location_data}]
+            
+            elif message_type == 'mixed':
+                # 混合消息（文本+图片等）
+                message = []
+                
+                # 添加文本
+                if 'text' in form_data or 'content' in form_data:
+                    text = form_data.get('text', form_data.get('content', ''))
+                    if text:
+                        message.append({'type': 'text', 'data': {'text': text}})
+                
+                # 添加图片
+                if 'image' in form_data:
+                    message.append({'type': 'image', 'data': {'file': form_data['image']}})
+                
+                # 添加@用户
+                if 'at' in form_data:
+                    at_qq = form_data['at']
+                    if at_qq == 'all':
+                        message.append({'type': 'at', 'data': {'qq': 'all'}})
+                    else:
+                        message.append({'type': 'at', 'data': {'qq': str(at_qq)}})
+                
+                return message if message else None
+            
+            else:
+                logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 不支持的消息类型: {message_type}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 构建消息内容失败: {e}")
+            return None
+
+    async def _send_direct_message(self, target_type: str, target_id: str, message_content):
+        """发送直接消息"""
+        try:
+            # 获取平台实例
+            platforms = self.context.platform_manager.get_insts()
+            if not platforms:
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 没有找到可用的平台实例")
+                return False
+            
+            # 使用第一个可用的平台实例
+            platform_inst = platforms[0]
+            client = platform_inst.get_client()
+            
+            if not client:
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 平台客户端不可用")
+                return False
+            
+            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 准备发送直接消息: {message_content}")
+            
+            # 根据目标类型发送消息
+            if target_type == 'group':
+                await client.send_group_msg(group_id=int(target_id), message=message_content)
+            else:
+                await client.send_private_msg(user_id=int(target_id), message=message_content)
+            
+            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 成功发送直接消息到 {target_type}:{target_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 发送直接消息失败: {e}")
             return False
 
     async def terminate(self):

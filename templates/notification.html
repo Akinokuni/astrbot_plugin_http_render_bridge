@@ -62,12 +62,38 @@
             text-align: center;
             margin-top: 4px;
         }
+        .image-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .uploaded-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .image-caption {
+            font-size: 12px;
+            color: #888;
+            margin-top: 8px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
     <div class="card">
         <div class="title">{{title | default('通知')}}</div>
         <div class="content">{{content | default('这是一条通知消息')}}</div>
+        
+        {% if image %}
+        <div class="image-container">
+            <img src="{{ image }}" alt="上传的图片" class="uploaded-image">
+            {% if image_filename %}
+            <div class="image-caption">{{ image_filename }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
         <div class="footer">{{timestamp | default('刚刚')}}</div>
     </div>
     {% if qr_code_base64 %}

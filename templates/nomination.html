@@ -1,28 +1,184 @@
 <!DOCTYPE html>
-            padding: 10px; border: 1px solid #e0e0e0;
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+        @import url("https://fontsapi.zeoseven.com/147/main/result.css");
+
+        /* 1. 重置和基础样式 */
+        body {
+            margin: 0;
+            background-color: #f4f6f8;
+            background-image: url("https://transparenttextures.com/patterns/crissxcross.png");
+            font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            font-size: 16px;
+            color: #333333;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
         }
-        .qr-image { display: block; width: 120px; height: 120px; }
-        .qr-text { font-size: 12px; color: #888; text-align: center; margin-top: 4px; }
+
+        /* 2. 布局样式 */
+        .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        /* 3. 组件样式 */
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+            padding: 40px 45px;
+            width: 100%;
+            max-width: 680px;
+            box-sizing: border-box;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        .header {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #4a6fa5;
+            margin: 0 0 30px 0;
+            border-bottom: 2px solid #4a6fa5;
+            padding-bottom: 20px;
+            word-break: break-all;
+        }
+
+        /* CORRECTED: Unified spacing for all content sections */
+        .user-section,
+        .nomination-item {
+            padding-top: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeef2;
+        }
+
+        /* CORRECTED: Remove special spacing from the user section */
+        .user-section {
+            display: flex;
+            align-items: baseline;
+        }
+
+        /* CORRECTED: The first item after the header no longer needs extra space */
+        .nomination-item:first-of-type {
+            /* Any special rules for the first item would go here, now it's consistent. */
+        }
+
+        .nomination-item:last-of-type {
+            border-bottom: none;
+            /* The last item should not have a bottom border */
+            padding-bottom: 10px;
+        }
+
+        .label {
+            font-weight: 700;
+            color: #4a6fa5;
+            font-size: 1.1em;
+            margin-right: 12px;
+            display: inline-block;
+            min-width: 70px;
+            flex-shrink: 0;
+        }
+
+        .value {
+            color: #333;
+            word-break: break-all;
+            line-height: 1.7;
+        }
+
+        .nominator-name {
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .title-value {
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+
+        .evaluate-block {
+            margin-top: 15px;
+            display: flex;
+        }
+
+        .evaluate-value {
+            font-family: "JiangChengLvDongSong", sans-serif;
+            font-weight: normal;
+            font-size: 1.1em;
+            color: #555555;
+            flex-grow: 1;
+        }
+
+        /* 二维码样式 */
+        .qr-container {
+            position: fixed;
+            right: 24px;
+            top: 24px;
+            z-index: 999;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.1);
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .qr-image {
+            display: block;
+            width: 120px;
+            height: 120px;
+        }
+
+        .qr-text {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin-top: 4px;
+        }
 
         /* 4. 响应式样式 */
         @media (max-width: 600px) {
-            .container { padding: 20px 15px; }
-            .card { padding: 30px 25px; }
-            .header { font-size: 1.8em; padding-bottom: 15px; }
-            .qr-container { display: none; }
+            .container {
+                padding: 20px 15px;
+            }
+
+            .card {
+                padding: 30px 25px;
+            }
+
+            .header {
+                font-size: 1.8em;
+                padding-bottom: 15px;
+            }
+
+            .qr-container {
+                display: none;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="card">
             <div class="header">{{header | default('十二🥥器：提名')}}</div>
-            
+
             <div class="user-section">
                 <span class="label">推荐人:</span>
-                <span class="value">{{ name | default('匿名') }}</span>
+                <span class="value nominator-name">{{ name | default('匿名') }}</span>
             </div>
-            
+
             {% if title1 %}
             <div class="nomination-item">
                 <div>
@@ -66,11 +222,10 @@
 
     {% if qr_code_base64 %}
     <div class="qr-container">
-        <img src="data:image/png;base64,{{ qr_code_base64 }}"
-             alt="二维码"
-             class="qr-image">
+        <img src="data:image/png;base64,{{ qr_code_base64 }}" alt="二维码" class="qr-image">
         <div class="qr-text">{{ qr_text | default('扫码参与') }}</div>
     </div>
     {% endif %}
 </body>
+
 </html>

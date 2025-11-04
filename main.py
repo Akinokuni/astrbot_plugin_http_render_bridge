@@ -41,6 +41,48 @@ async def fetch_qr_code_as_base64(url: str) -> str:
         return ""
 
 
+async def process_uploaded_image(filename: str, file_data: bytes) -> Optional[Dict[str, Any]]:
+    """处理上传的图片文件"""
+    try:
+        # 检查文件大小（限制为5MB）
+        max_size = 5 * 1024 * 1024  # 5MB
+        if len(file_data) > max_size:
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 图片文件过大: {len(file_data)} bytes > {max_size} bytes")
+            return None
+        
+        # 检查文件扩展名
+        allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'}
+        file_ext = os.path.splitext(filename.lower())[1]
+        if file_ext not in allowed_extensions:
+            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 不支持的图片格式: {file_ext}")
+            return None
+        
+        # 转换为base64
+        base64_data = base64.b64encode(file_data).decode('utf-8')
+        
+        # 确定MIME类型
+        mime_types = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg', 
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp',
+            '.bmp': 'image/bmp'
+        }
+        mime_type = mime_types.get(file_ext, 'image/jpeg')
+        
+        return {
+            'filename': filename,
+            'size': len(file_data),
+            'mime_type': mime_type,
+            'base64': f"data:{mime_type};base64,{base64_data}"
+        }
+        
+    except Exception as e:
+        logger.error(f"[AstrBot Plugin HTTP Render Bridge] 处理图片文件失败: {e}")
+        return None
+
+
 @register(
     'astrbot_plugin_http_render_bridge',
     'Kiro AI Assistant',
@@ -277,7 +319,7 @@ class HttpRenderBridge(Star):
         return template_name, target_type, target_id
 
     async def _parse_form_data(self, request: web.Request):
-        """解析multipart/form-data请求体"""
+        """解析multipart/form-data请求体，支持文本和图片文件"""
         try:
             if request.content_type != 'multipart/form-data':
                 return web.json_response({
@@ -290,8 +332,24 @@ class HttpRenderBridge(Star):
             
             async for field in reader:
                 if field.name:
-                    value = await field.text()
-                    form_data[field.name] = value
+                    # 检查是否是文件字段
+                    if field.filename:
+                        # 这是一个文件字段
+                        file_data = await field.read()
+                        file_info = await process_uploaded_image(field.filename, file_data)
+                        if file_info:
+                            # 使用字段名作为键，存储图片的base64数据
+                            form_data[field.name] = file_info['base64']
+                            # 同时存储文件信息
+                            form_data[f"{field.name}_filename"] = file_info['filename']
+                            form_data[f"{field.name}_size"] = file_info['size']
+                            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 处理图片文件: {field.name} -> {file_info['filename']} ({file_info['size']} bytes)")
+                        else:
+                            logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 图片处理失败: {field.filename}")
+                    else:
+                        # 这是一个文本字段
+                        value = await field.text()
+                        form_data[field.name] = value
             
             logger.info(f"[AstrBot Plugin HTTP Render Bridge] 解析到表单数据: {list(form_data.keys())}")
             return form_data

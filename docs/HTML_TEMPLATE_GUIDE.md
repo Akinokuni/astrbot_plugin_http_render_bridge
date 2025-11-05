@@ -7,6 +7,8 @@
 - [基础结构](#基础结构)
 - [Jinja2 模板语法](#jinja2-模板语法)
 - [CSS 样式指南](#css-样式指南)
+- [图片导入支持](#图片导入支持)
+- [在线字体服务](#在线字体服务)
 - [二维码支持](#二维码支持)
 - [响应式设计](#响应式设计)
 - [最佳实践](#最佳实践)
@@ -171,6 +173,395 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 12px 40px rgba(0,0,0,0.15);
 }
+```
+
+## � ️ 图片导入支持
+
+插件支持多种方式在HTML模板中使用图片，提供灵活的图片处理方案。
+
+### 上传图片文件
+
+通过HTTP请求上传图片文件，插件会自动转换为base64格式供模板使用。
+
+#### 支持的图片格式
+- **JPG/JPEG** - 高质量照片
+- **PNG** - 支持透明背景
+- **GIF** - 支持动画
+- **WebP** - 现代高效格式
+- **BMP** - 位图格式
+
+#### 文件大小限制
+- 最大文件大小：**5MB**
+- 自动转换为base64数据URI
+- 内存处理，无磁盘存储
+
+#### 在模板中使用上传的图片
+
+```html
+<!-- 单张图片显示 -->
+{% if image %}
+<div class="image-container">
+    <img src="{{ image }}" alt="上传的图片" class="uploaded-image">
+    {% if image_filename %}
+    <div class="image-caption">{{ image_filename }}</div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- 多张图片网格显示 -->
+<div class="image-grid">
+    {% if image0 %}
+    <div class="image-item">
+        <img src="{{ image0 }}" alt="图片1" class="grid-image">
+        <div class="image-info">
+            <span class="filename">{{ image0_filename }}</span>
+            <span class="filesize">{{ image0_size }} bytes</span>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if image1 %}
+    <div class="image-item">
+        <img src="{{ image1 }}" alt="图片2" class="grid-image">
+        <div class="image-info">
+            <span class="filename">{{ image1_filename }}</span>
+            <span class="filesize">{{ image1_size }} bytes</span>
+        </div>
+    </div>
+    {% endif %}
+</div>
+```
+
+#### 图片样式CSS
+
+```css
+/* 单张图片样式 */
+.image-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.uploaded-image {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    object-fit: cover;
+}
+
+.image-caption {
+    font-size: 14px;
+    color: #666;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* 多图片网格样式 */
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.image-item {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.image-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.grid-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.image-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filename {
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+}
+
+.filesize {
+    font-size: 11px;
+    color: #888;
+}
+```
+
+### 使用网络图片
+
+直接在HTML中引用网络图片URL。
+
+```html
+<!-- 网络图片 -->
+<img src="https://example.com/image.jpg" alt="网络图片" class="network-image">
+
+<!-- 带加载失败处理 -->
+<img src="https://example.com/image.jpg" 
+     alt="网络图片" 
+     class="network-image"
+     onerror="this.style.display='none'">
+```
+
+### 图片优化建议
+
+#### 响应式图片
+```css
+.responsive-image {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+}
+
+@media (max-width: 768px) {
+    .responsive-image {
+        max-width: 100%;
+    }
+}
+```
+
+#### 图片加载效果
+```css
+.image-loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+```
+
+#### 图片圆角和阴影
+```css
+.styled-image {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.styled-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
+```
+
+## 🎨 在线字体服务
+
+使用在线字体服务可以让你的模板拥有更丰富的字体选择和更好的视觉效果。
+
+### Google Fonts
+
+Google Fonts 是最流行的免费在线字体服务，提供大量高质量字体。
+
+#### 基本使用方法
+
+```html
+<head>
+    <meta charset="utf-8">
+    <!-- 导入Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+    </style>
+</head>
+```
+
+#### 推荐的中文字体
+
+```css
+/* 思源黑体 - 现代简洁 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+/* 思源宋体 - 传统优雅 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap');
+
+/* 字体应用 */
+.modern-text {
+    font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+}
+
+.elegant-text {
+    font-family: 'Noto Serif SC', 'SimSun', serif;
+}
+```
+
+#### 推荐的英文字体
+
+```css
+/* Roboto - Google Material Design字体 */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* Inter - 现代UI字体 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Poppins - 圆润现代 */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* 字体应用 */
+.title-font {
+    font-family: 'Inter', 'Roboto', sans-serif;
+    font-weight: 600;
+}
+
+.body-font {
+    font-family: 'Roboto', 'Noto Sans SC', sans-serif;
+    font-weight: 400;
+}
+```
+
+### 字体加载优化
+
+#### 字体显示策略
+```css
+/* 使用font-display优化加载 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+
+/* 或者在CSS中定义 */
+@font-face {
+    font-family: 'CustomFont';
+    src: url('https://fonts.gstatic.com/...');
+    font-display: swap; /* 优化字体加载 */
+}
+```
+
+#### 字体回退策略
+```css
+/* 完整的字体栈 */
+.text-primary {
+    font-family: 
+        'Noto Sans SC',           /* 在线字体 */
+        'PingFang SC',            /* macOS系统字体 */
+        'Microsoft YaHei',        /* Windows系统字体 */
+        'Hiragino Sans GB',       /* 老版macOS */
+        'WenQuanYi Micro Hei',    /* Linux字体 */
+        sans-serif;               /* 通用回退 */
+}
+
+.text-serif {
+    font-family:
+        'Noto Serif SC',          /* 在线宋体 */
+        'SimSun',                 /* Windows宋体 */
+        'STSong',                 /* macOS宋体 */
+        serif;                    /* 通用衬线回退 */
+}
+```
+
+### 字体使用最佳实践
+
+#### 字体权重和样式
+```css
+/* 定义字体权重 */
+.font-light { font-weight: 300; }
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+
+/* 字体大小系统 */
+.text-xs { font-size: 12px; }
+.text-sm { font-size: 14px; }
+.text-base { font-size: 16px; }
+.text-lg { font-size: 18px; }
+.text-xl { font-size: 20px; }
+.text-2xl { font-size: 24px; }
+.text-3xl { font-size: 30px; }
+```
+
+#### 行高和字间距
+```css
+/* 优化可读性 */
+.readable-text {
+    line-height: 1.6;           /* 行高 */
+    letter-spacing: 0.02em;     /* 字间距 */
+    word-spacing: 0.1em;        /* 词间距 */
+}
+
+/* 标题样式 */
+.heading {
+    line-height: 1.2;
+    letter-spacing: -0.02em;    /* 标题可以稍微紧凑 */
+}
+
+/* 中文优化 */
+.chinese-text {
+    line-height: 1.8;           /* 中文需要更大行高 */
+    letter-spacing: 0.05em;     /* 适当的字间距 */
+}
+```
+
+### 完整字体示例
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <!-- 导入多种字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-primary: 'Inter', 'Noto Sans SC', sans-serif;
+            --font-chinese: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            font-family: var(--font-primary);
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .title {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 28px;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+        
+        .subtitle {
+            font-family: var(--font-chinese);
+            font-weight: 500;
+            font-size: 18px;
+            color: #666;
+        }
+        
+        .content {
+            font-family: var(--font-chinese);
+            font-weight: 400;
+            line-height: 1.8;
+            letter-spacing: 0.02em;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="title">{{title | default('Beautiful Typography')}}</h1>
+        <p class="subtitle">{{subtitle | default('优美的字体排版')}}</p>
+        <div class="content">{{content | default('这里是正文内容，展示中英文混排的效果。')}}</div>
+    </div>
+</body>
+</html>
 ```
 
 ## 📱 二维码支持
@@ -348,6 +739,230 @@ body {
 ```
 
 ## 📝 示例模板
+
+### 带图片和在线字体的现代通知模板
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <!-- 导入Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-primary: 'Inter', 'Noto Sans SC', sans-serif;
+            --font-chinese: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+        }
+        
+        body {
+            font-family: var(--font-primary);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .title {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 28px;
+            color: #1f2937;
+            margin-bottom: 16px;
+            text-align: center;
+            letter-spacing: -0.02em;
+        }
+        
+        .subtitle {
+            font-family: var(--font-chinese);
+            font-weight: 500;
+            font-size: 16px;
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .content {
+            font-family: var(--font-chinese);
+            font-size: 16px;
+            color: #374151;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            letter-spacing: 0.02em;
+        }
+        
+        /* 图片容器样式 */
+        .image-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .main-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+            object-fit: cover;
+        }
+        
+        .image-caption {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 12px;
+            font-style: italic;
+        }
+        
+        /* 多图片网格 */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 30px 0;
+        }
+        
+        .grid-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+        
+        .grid-image:hover {
+            transform: scale(1.05);
+        }
+        
+        .footer {
+            font-family: var(--font-primary);
+            font-size: 14px;
+            color: #9ca3af;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+            margin-top: 30px;
+        }
+        
+        .qr-container {
+            position: fixed;
+            right: 24px;
+            top: 24px;
+            z-index: 999;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            padding: 12px;
+        }
+        
+        .qr-image {
+            display: block;
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+        }
+        
+        .qr-text {
+            font-family: var(--font-chinese);
+            font-size: 12px;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .card {
+                padding: 24px;
+                margin: 10px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .qr-container {
+                display: none;
+            }
+            
+            .image-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="title">{{title | default('Modern Notification')}}</h1>
+        <p class="subtitle">{{subtitle | default('现代化通知模板')}}</p>
+        
+        <div class="content">{{content | default('这是一个使用了在线字体和图片支持的现代化通知模板。支持中英文混排，具有优美的字体效果。')}}</div>
+        
+        <!-- 主图片显示 -->
+        {% if image %}
+        <div class="image-container">
+            <img src="{{ image }}" alt="主图片" class="main-image">
+            {% if image_filename %}
+            <div class="image-caption">{{ image_filename }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- 多图片网格显示 -->
+        {% if image0 or image1 or image2 or image3 %}
+        <div class="image-grid">
+            {% if image0 %}
+            <img src="{{ image0 }}" alt="图片1" class="grid-image">
+            {% endif %}
+            {% if image1 %}
+            <img src="{{ image1 }}" alt="图片2" class="grid-image">
+            {% endif %}
+            {% if image2 %}
+            <img src="{{ image2 }}" alt="图片3" class="grid-image">
+            {% endif %}
+            {% if image3 %}
+            <img src="{{ image3 }}" alt="图片4" class="grid-image">
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="footer">{{timestamp | default('刚刚')}}</div>
+    </div>
+    
+    {% if qr_code_base64 %}
+    <div class="qr-container">
+        <img src="data:image/png;base64,{{ qr_code_base64 }}"
+             alt="二维码"
+             class="qr-image">
+        <div class="qr-text">{{ qr_text | default('扫码访问链接') }}</div>
+    </div>
+    {% endif %}
+</body>
+</html>
+```
 
 ### 简单通知模板
 
@@ -559,10 +1174,44 @@ A:
 
 ### Q: 模板中的图片如何处理？
 
-A: 
-1. 使用 base64 编码的图片：`<img src="data:image/png;base64,...">`
-2. 使用网络图片：`<img src="https://...">`
-3. 二维码会自动处理，只需传入 `link` 参数
+A: 支持多种图片使用方式：
+1. **上传图片文件**：通过HTTP请求上传，插件自动转换为base64
+2. **使用网络图片**：`<img src="https://example.com/image.jpg">`
+3. **base64图片**：`<img src="data:image/png;base64,..."`
+4. **二维码**：传入 `link` 参数自动生成
+
+### Q: 支持哪些图片格式？
+
+A: 支持的格式包括：
+- JPG/JPEG - 高质量照片
+- PNG - 支持透明背景  
+- GIF - 支持动画
+- WebP - 现代高效格式
+- BMP - 位图格式
+- 最大文件大小：5MB
+
+### Q: 如何在模板中使用上传的图片？
+
+A: 使用以下变量：
+- `{{ image }}` - 单张图片的base64数据
+- `{{ image_filename }}` - 图片文件名
+- `{{ image_size }}` - 图片文件大小
+- `{{ image0 }}`, `{{ image1 }}` - 多张图片支持
+
+### Q: 在线字体加载慢怎么办？
+
+A: 优化建议：
+1. 使用 `font-display: swap` 优化加载
+2. 设置完整的字体回退栈
+3. 只加载需要的字体权重
+4. 使用字体预加载：`<link rel="preload" href="..." as="font">`
+
+### Q: 推荐使用哪些在线字体？
+
+A: 推荐字体：
+- **中文**：Noto Sans SC（思源黑体）、Noto Serif SC（思源宋体）
+- **英文**：Inter、Roboto、Poppins
+- **代码**：JetBrains Mono、Fira Code
 
 ### Q: 如何优化渲染性能？
 

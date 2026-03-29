@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ qq_number or "未知QQ" }}入群答题</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --ok: #065f46;
+      --ok-bg: #ecfdf5;
+      --normal: #1e3a8a;
+      --normal-bg: #eff6ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .wrap {
+      width: 940px;
+      min-height: 560px;
+      margin: 0 auto;
+      padding: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 14px 38px rgba(17, 24, 39, 0.08);
+    }
+
+    .header {
+      padding: 24px 28px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .title {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .main {
+      padding: 22px 28px 26px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 16px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .score {
+      font-size: 62px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--normal);
+      background: var(--normal-bg);
+    }
+
+    .badge.pass {
+      color: var(--ok);
+      background: var(--ok-bg);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: .85;
+    }
+
+    .answers {
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.75;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .footer {
+      border-top: 1px solid var(--line);
+      padding: 12px 28px 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  {% set s = (score or "0")|int %}
+  {% set t = (threshold or "0")|int %}
+  {% set p = pass_status or ("pass" if s >= t else "fail") %}
+  {% set qq = qq_number or "未知QQ" %}
+
+  <div class="wrap">
+    <section class="card">
+      <header class="header">
+        <h1 class="title">{{ qq }}入群答题</h1>
+      </header>
+
+      <div class="main">
+        <aside class="panel">
+          <div class="label">客观题总分</div>
+          <div class="score">{{ score or "0" }}</div>
+          {% if p == 'pass' %}
+          <div class="badge pass"><span class="dot"></span>已达标</div>
+          {% else %}
+          <div class="badge"><span class="dot"></span>未达标</div>
+          {% endif %}
+          <div class="label" style="margin-top: 10px;">达标线：{{ threshold or "-" }}</div>
+        </aside>
+
+        <section class="panel">
+          <div class="label">简答题</div>
+          <div class="answers">{{ non_qq_subjective_text or "无内容" }}</div>
+        </section>
+      </div>
+
+      <footer class="footer">提交时间：{{ submitted_at or "-" }}</footer>
+    </section>
+  </div>
+</body>
+</html>

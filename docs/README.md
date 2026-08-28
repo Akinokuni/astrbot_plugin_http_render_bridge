@@ -11,7 +11,7 @@
 
 ### 功能指南
 
-- [**HTML模板书写指南**](HTML_TEMPLATE_GUIDE.md) - 创建美观HTML模板的完整指南
+- [**Typst模板书写指南**](TYPST_TEMPLATE_GUIDE.md) - 创建美观Typst模板的完整指南
 - [**图片上传功能指南**](IMAGE_UPLOAD_GUIDE.md) - 图片上传和处理功能使用说明
 - [**NapCat消息类型指南**](MESSAGE_TYPES_GUIDE.md) - 支持的15种消息类型详细说明
 - [**模板配置指南**](TEMPLATE_CONFIG_GUIDE.md) - 模板系统配置和管理
@@ -26,7 +26,7 @@
 
 ### 核心功能
 
-1. **HTML模板渲染** - 将动态数据渲染为美观的HTML图片
+1. **Typst模板渲染** - 将动态数据编译为美观的 PNG 图片
 2. **图片上传支持** - 支持多种格式图片的上传和处理
 3. **二维码生成** - 自动生成二维码并嵌入模板
 4. **NapCat消息类型** - 支持15种不同的消息类型直接发送
@@ -34,7 +34,7 @@
 
 ### 支持的消息类型
 
-- **模板渲染**: HTML模板 → 图片 → 消息
+- **模板渲染**: Typst模板 → PNG图片 → 消息
 - **直接消息**: 文本、图片、语音、视频、@用户、回复、转发等
 - **特殊消息**: 表情、戳一戳、抖动、音乐分享、链接分享、位置分享
 - **混合消息**: 文本+图片+@用户的组合消息
@@ -46,16 +46,18 @@ HTTP请求 → 插件处理 → 消息构建 → NapCat → QQ
     ↓
 [模板渲染] 或 [直接消息]
     ↓
-HTML→图片 或 消息数据
+Typst编译→PNG 或 消息数据
 ```
+
+渲染引擎：优先官方 `typst` Python 绑定（内存编译），自动回退 `typst` CLI 子进程。
 
 ## 使用场景
 
 ### 1. 系统通知
 ```bash
-# HTML模板渲染
+# Typst模板渲染
 curl -X POST http://localhost:11451/api/render/image \
-  -H "X-Html-Template: notification" \
+  -H "X-Template: notification" \
   -H "X-Target-Type: group" \
   -H "X-Target-Id: 123456789" \
   -F "title=系统维护通知" \
@@ -66,7 +68,7 @@ curl -X POST http://localhost:11451/api/render/image \
 ```bash
 # 使用报告模板
 curl -X POST http://localhost:11451/api/render/image \
-  -H "X-Html-Template: report" \
+  -H "X-Template: report" \
   -H "X-Target-Type: group" \
   -H "X-Target-Id: 123456789" \
   -F "title=每日数据报告" \
@@ -115,7 +117,7 @@ curl -X POST http://localhost:11451/api/render/image \
 ### 图片展示模板
 - 适用于图片集合展示
 - 支持单图和多图布局
-- 响应式设计
+- Typst 网格布局
 
 ## 相关链接
 

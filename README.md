@@ -1,20 +1,20 @@
 # AstrBot HTTP 渲染桥梁插件
 
-一个功能强大的 AstrBot 插件，提供 HTTP API 接口，支持 HTML 模板渲染、图片上传、二维码生成和多种 NapCat 消息类型的发送。
+一个功能强大的 AstrBot 插件，提供 HTTP API 接口，支持 Typst 模板渲染、图片上传、二维码生成和多种 NapCat 消息类型的发送。
 
 ## 功能特性
 
 ### 核心功能
 - **HTTP API 接口** - 提供标准化的 REST API 接收外部请求
 - **Bearer Token 认证** - 安全的 API 访问控制
-- **双模式支持** - HTML模板渲染 + 直接消息发送
-- **动态渲染** - 使用 Jinja2 模板引擎动态填充数据
+- **双模式支持** - Typst模板渲染 + 直接消息发送
+- **动态渲染** - 使用 Typst 排版引擎动态渲染数据
 
-### HTML模板功能
-- **本地图片生成** - 强制使用 AstrBot 本地渲染引擎
-- **样式完整保留** - 直接渲染 HTML，保留所有 CSS 样式和布局
-- **智能后备机制** - HTML 渲染失败时自动降级为 Markdown 渲染
-- **图片上传支持** - 支持多种格式图片上传和嵌入
+### Typst模板功能
+- **本地图片生成** - 使用 Typst 编译为 PNG 图片
+- **双渲染路径** - 优先官方 `typst` Python 绑定内存编译，自动回退 `typst` CLI
+- **排版级样式** - 支持 Typst 完整排版能力（字体、颜色、表格、渐变）
+- **图片上传支持** - 支持多种格式图片上传并嵌入模板
 - **二维码生成** - 自动生成二维码并嵌入模板
 
 ### NapCat消息类型
@@ -52,10 +52,10 @@
 
 ### 3. 使用示例
 
-#### HTML模板渲染
+#### Typst模板渲染
 ```bash
 curl -X POST http://localhost:11451/api/render/image \
-  -H "X-Html-Template: notification" \
+  -H "X-Template: notification" \
   -H "X-Target-Type: group" \
   -H "X-Target-Id: 123456789" \
   -F "title=系统通知" \
@@ -84,7 +84,7 @@ curl -X POST http://localhost:11451/api/render/image \
 
 | 类型 | 说明 | 示例用途 |
 |------|------|----------|
-| `template` | HTML模板渲染（默认） | 系统通知、数据报告 |
+| `template` | Typst模板渲染（默认） | 系统通知、数据报告 |
 | `text` | 纯文本消息 | 简单文本发送 |
 | `image` | 图片消息 | 图片分享 |
 | `voice` | 语音消息 | 语音播报 |
@@ -104,13 +104,14 @@ curl -X POST http://localhost:11451/api/render/image \
 
 | 模板名 | 文件 | 用途 |
 |--------|------|------|
-| `notification` | notification.html | 通用通知消息 |
-| `alert` | alert.html | 警告和错误消息 |
-| `success` | success.html | 成功和完成消息 |
-| `nomination` | nomination.html | 提名展示 |
-| `report` | report.html | 数据报告 |
-| `image_showcase` | image_showcase.html | 图片展示 |
-| `default` | default.html | 默认模板 |
+| `notification` | notification.typ | 通用通知消息 |
+| `alert` | alert.typ | 警告和错误消息 |
+| `success` | success.typ | 成功和完成消息 |
+| `nomination` | nomination.typ | 提名展示 |
+| `report` | report.typ | 数据报告 |
+| `image_showcase` | image_showcase.typ | 图片展示 |
+| `quiz` | quiz.typ | 答题结果 |
+| `default` | default.typ | 默认模板 |
 
 ## API 接口
 
@@ -124,7 +125,7 @@ curl -X POST http://localhost:11451/api/render/image \
 | 请求头 | 必需 | 说明 |
 |--------|------|------|
 | `X-Message-Type` | 否 | 消息类型，默认为 `template` |
-| `X-Html-Template` | 条件 | HTML模板名（模板模式必需） |
+| `X-Template` | 条件 | Typst模板名（模板模式必需） |
 | `X-Target-Type` | 是 | 目标类型：`group` 或 `private` |
 | `X-Target-Id` | 是 | 目标ID（群号或QQ号） |
 | `Authorization` | 否 | Bearer Token认证 |
@@ -143,15 +144,15 @@ curl -X POST http://localhost:11451/api/render/image \
 ## 图片上传功能
 
 ### 支持格式
-- JPG, JPEG, PNG, GIF, WebP, BMP
+- JPG, JPEG, PNG, GIF, WebP
 - 最大文件大小：5MB
-- 自动转换为base64嵌入模板
+- 自动转换为 hex 字符串并注入模板的 `image` 字段（模板通过 `hex-to-bytes` 解码）
 
 ### 使用方法
 ```bash
 # 在模板中显示图片
 curl -X POST http://localhost:11451/api/render/image \
-  -H "X-Html-Template: notification" \
+  -H "X-Template: notification" \
   -H "X-Target-Type: group" \
   -H "X-Target-Id: 123456789" \
   -F "title=图片通知" \
@@ -173,7 +174,7 @@ curl -X POST http://localhost:11451/api/render/image \
 
 ```bash
 curl -X POST http://localhost:11451/api/render/image \
-  -H "X-Html-Template: notification" \
+  -H "X-Template: notification" \
   -H "X-Target-Type: group" \
   -H "X-Target-Id: 123456789" \
   -F "title=扫码访问" \
@@ -193,9 +194,9 @@ class AstrBotMessageSender:
         self.token = token
     
     def send_template(self, template, target_type, target_id, **data):
-        """发送HTML模板消息"""
+        """发送Typst模板消息"""
         headers = {
-            "X-Html-Template": template,
+            "X-Template": template,
             "X-Target-Type": target_type,
             "X-Target-Id": target_id
         }
@@ -248,7 +249,7 @@ sender.send_text("Hello, World!", "group", "123456789")
 
 - [ 文档中心](docs/README.md) - 完整文档索引
 - [ 部署指南](docs/DEPLOYMENT.md) - 安装和配置说明
-- [ HTML模板指南](docs/HTML_TEMPLATE_GUIDE.md) - 模板开发指南
+- [ Typst模板指南](docs/TYPST_TEMPLATE_GUIDE.md) - 模板开发指南
 - [ 图片上传指南](docs/IMAGE_UPLOAD_GUIDE.md) - 图片功能使用说明
 - [ 消息类型指南](docs/MESSAGE_TYPES_GUIDE.md) - NapCat消息类型详解
 - [ API参考](docs/API_REFERENCE.md) - 完整API文档
@@ -279,7 +280,7 @@ sender.send_text("Hello, World!", "group", "123456789")
 - `test_message_types.py` - 测试各种消息类型
 - `test_image_upload.py` - 测试图片上传功能
 - `test_qr_code.py` - 测试二维码生成
-- `test_templates.py` - 测试HTML模板渲染
+- `test_templates.py` - 测试Typst模板渲染
 
 ```bash
 # 运行测试
@@ -301,7 +302,9 @@ python test_image_upload.py
 
 3. **模板渲染失败**
    - 检查模板文件是否存在
-   - 验证Jinja2语法正确性
+   - 验证 Typst 语法正确性
+   - 确认 typst Python 包或 CLI 已安装
+   - 查看日志确认使用的渲染路径（绑定/CLI后备）
 
 4. **消息发送失败**
    - 确认目标ID正确
@@ -323,7 +326,7 @@ python test_image_upload.py
 
 - [AstrBot](https://astrbot.app) - 主项目
 - [NapCat](https://napcat.napneko.icu) - QQ机器人框架
-- [Jinja2](https://jinja.palletsprojects.com/) - 模板引擎
+- [Typst](https://typst.app) - 排版引擎
 
 ---
 

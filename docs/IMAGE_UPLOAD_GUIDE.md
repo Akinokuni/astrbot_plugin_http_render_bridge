@@ -4,15 +4,15 @@
 
 ## 功能概述
 
-插件现在支持通过 HTTP 请求上传图片文件，并将其嵌入到 HTML 模板中进行渲染。图片会自动转换为 base64 格式，无需额外的文件存储。
+插件支持通过 HTTP 请求上传图片文件，并将其嵌入到 Typst 模板中进行渲染。图片会自动转换为 hex 字符串注入模板数据，模板通过 `hex-to-bytes` 辅助函数解码为图片字节，无需额外的文件存储。
 
 ## 支持的功能
 
-- **多种图片格式**: JPG, JPEG, PNG, GIF, WebP, BMP
+- **多种图片格式**: JPG, JPEG, PNG, GIF, WebP
 - **文件大小限制**: 最大 5MB
-- **自动转换**: 图片自动转换为 base64 数据URI
+- **自动转换**: 图片自动转换为 hex 字符串
 - **多图片支持**: 一次请求可以上传多张图片
-- **模板集成**: 图片可以在任何 HTML 模板中显示
+- **模板集成**: 图片可以在任何 Typst 模板中显示（需定义 `hex-to-bytes` 辅助函数）
 - **文件信息**: 自动提供文件名和大小信息
 
 ## 使用方法
@@ -23,7 +23,7 @@
 
 ```bash
 curl -X POST http://localhost:11451/api/render/image \
-  -H "X-Html-Template: notification" \
+  -H "X-Template: notification" \
   -H "X-Target-Type: group" \
   -H "X-Target-Id: 123456789" \
   -F "title=图片通知" \
@@ -38,8 +38,8 @@ import requests
 
 url = "http://localhost:11451/api/render/image"
 headers = {
-    "X-Html-Template": "notification",
-    "X-Target-Type": "group", 
+    "X-Template": "notification",
+    "X-Target-Type": "group",
     "X-Target-Id": "123456789"
 }
 
@@ -72,98 +72,87 @@ response = requests.post(url, headers=headers, data=data, files=files)
 
 ### 基本图片显示
 
-```html
-<!-- 显示单张图片 -->
-{% if image %}
-<div class="image-container">
-    <img src="{{ image }}" alt="上传的图片" class="uploaded-image">
-    {% if image_filename %}
-    <div class="image-caption">{{ image_filename }}</div>
-    {% endif %}
-</div>
-{% endif %}
+```typst
+// 模板开头定义 hex 解码函数（每个模板均需包含）
+#let hex-to-bytes(s) = bytes(range(0, calc.floor(s.len() / 2)).map(i => int(s.slice(i * 2, i * 2 + 2), base: 16)))
+
+// 模板开头读取数据
+#let data = json(bytes(sys.inputs.at("data", default: "{}")))
+
+// 显示单张图片（存在性判断）
+#if "image" in data [
+  #align(center, image(hex-to-bytes(data.at("image")), width: 80%, fit: "contain"))
+  #if "image_filename" in data [
+    #align(center, text(size: 10pt, fill: gray)[#data.at("image_filename")])
+  ]
+]
 ```
 
 ### 多图片网格布局
 
-```html
-<!-- 多图片网格 -->
-<div class="image-grid">
-    {% if image0 %}
-    <div class="image-item">
-        <img src="{{ image0 }}" alt="图片1">
-        <div class="filename">{{ image0_filename }}</div>
-    </div>
-    {% endif %}
-    
-    {% if image1 %}
-    <div class="image-item">
-        <img src="{{ image1 }}" alt="图片2">
-        <div class="filename">{{ image1_filename }}</div>
-    </div>
-    {% endif %}
-</div>
+```typst
+#let data = json(bytes(sys.inputs.at("data", default: "{}")))
+
+// 收集 image0 ~ image3
+#let images = ()
+#for i in range(4) {
+  let key = "image" + str(i)
+  if key in data {
+    images.push((data.at(key), data.at(key + "_filename", default: "")))
+  }
+}
+
+// 网格显示
+#if images.len() > 0 [
+  #grid(
+    columns: 2,
+    gutter: 12pt,
+    ..images.map(((uri, name)) => block(
+      fill: rgb("#f8f9fa"),
+      radius: 10pt,
+      inset: 8pt,
+      align(center)[
+        #image(hex-to-bytes(uri), width: 100%, fit: "contain")
+        #v(4pt)
+        #text(size: 9pt, fill: gray)[#name]
+      ],
+    )),
+  )
+]
 ```
 
-### 推荐的CSS样式
+### 图片样式控制
 
-```css
-.image-container {
-    margin: 20px 0;
-    text-align: center;
-}
+```typst
+// 指定宽高（fit 裁切）
+#image(hex-to-bytes(data.at("image")), width: 200pt, height: 150pt, fit: "cover")
 
-.uploaded-image {
-    max-width: 100%;
-    max-height: 300px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.image-caption {
-    font-size: 12px;
-    color: #888;
-    margin-top: 8px;
-    font-style: italic;
-}
-
-.image-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin: 20px 0;
-}
-
-.image-item {
-    text-align: center;
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 10px;
-}
-
-.image-item img {
-    max-width: 100%;
-    max-height: 200px;
-    border-radius: 8px;
-}
+// 圆角显示（裁剪遮罩）
+#box(
+  width: 120pt,
+  height: 120pt,
+  radius: 12pt,
+  clip: true,
+  image(hex-to-bytes(data.at("image")), width: 100%, height: 100%, fit: "cover"),
+)
 ```
 
 ## 可用的模板变量
 
-当上传图片时，插件会自动提供以下变量：
+当上传图片时，插件会自动将以下字段注入 `data` JSON：
 
 ### 单图片字段 (字段名: `image`)
-- `{{ image }}` - 图片的 base64 数据URI
-- `{{ image_filename }}` - 原始文件名
-- `{{ image_size }}` - 文件大小（字节）
+- `image` - 图片的 hex 字符串
+- `image_filename` - 原始文件名
+- `image_size` - 文件大小（字节）
 
 ### 多图片字段 (字段名: `image0`, `image1`, 等)
-- `{{ image0 }}` - 第一张图片的 base64 数据URI
-- `{{ image0_filename }}` - 第一张图片的文件名
-- `{{ image0_size }}` - 第一张图片的大小
-- `{{ image1 }}` - 第二张图片的 base64 数据URI
-- `{{ image1_filename }}` - 第二张图片的文件名
-- `{{ image1_size }}` - 第二张图片的大小
+- `image0` - 第一张图片的 hex 字符串
+- `image0_filename` - 第一张图片的文件名
+- `image0_size` - 第一张图片的大小
+- `image1` - 第二张图片的 hex 字符串
+- `image1_filename` - 第二张图片的文件名
+- `image1_size` - 第二张图片的大小
 - ... 以此类推
 
 ## 技术细节
@@ -171,18 +160,17 @@ response = requests.post(url, headers=headers, data=data, files=files)
 ### 文件处理流程
 
 1. **接收文件** - 通过 multipart/form-data 接收
-2. **格式验证** - 检查文件扩展名和MIME类型
+2. **格式验证** - 检查文件扩展名和 MIME 类型
 3. **大小检查** - 限制最大 5MB
-4. **Base64转换** - 转换为 `data:image/type;base64,xxx` 格式
-5. **模板传递** - 作为变量传递给 Jinja2 模板
+4. **Hex 转换** - 转换为 hex 字符串
+5. **数据注入** - 写入 `data` JSON 对象，随 `sys.inputs` 注入模板
 
-### 支持的MIME类型
+### 支持的 MIME 类型
 
 - `image/jpeg` - JPG, JPEG 文件
 - `image/png` - PNG 文件
 - `image/gif` - GIF 文件
 - `image/webp` - WebP 文件
-- `image/bmp` - BMP 文件
 
 ### 安全限制
 
@@ -193,55 +181,79 @@ response = requests.post(url, headers=headers, data=data, files=files)
 
 ## 示例模板
 
-### 通知模板 (notification.html)
+### 通知模板 (notification.typ)
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <style>
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 600px;
-        }
-        .image-container {
-            margin: 20px 0;
-            text-align: center;
-        }
-        .uploaded-image {
-            max-width: 100%;
-            max-height: 300px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>{{title | default('通知')}}</h2>
-        <p>{{content | default('这是一条通知消息')}}</p>
-        
-        {% if image %}
-        <div class="image-container">
-            <img src="{{ image }}" alt="上传的图片" class="uploaded-image">
-            {% if image_filename %}
-            <div class="image-caption">{{ image_filename }}</div>
-            {% endif %}
-        </div>
-        {% endif %}
-        
-        <div class="footer">{{timestamp | default('刚刚')}}</div>
-    </div>
-</body>
-</html>
+```typst
+#let data = json(bytes(sys.inputs.at("data", default: "{}")))
+#let title = data.at("title", default: "通知")
+#let content = data.at("content", default: "这是一条通知消息")
+#let timestamp = data.at("timestamp", default: "刚刚")
+
+#set page(width: 620pt, height: auto, margin: 24pt,
+         fill: gradient.linear(rgb("#667eea"), rgb("#764ba2"), angle: 135deg))
+#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", size: 14pt)
+
+#block(fill: white, radius: 15pt, inset: (x: 26pt, y: 22pt))[
+  #text(size: 22pt, weight: "bold", fill: rgb("#333333"))[#title]
+  #v(10pt)
+  #set par(leading: 1.7em)
+  #text(fill: rgb("#666666"))[#content]
+
+  // 图片显示
+  #if "image" in data [
+    #v(14pt)
+    #align(center, image(hex-to-bytes(data.at("image")), width: 90%, fit: "contain"))
+    #if "image_filename" in data [
+      #v(6pt)
+      #align(center, text(size: 10pt, fill: gray)[#data.at("image_filename")])
+    ]
+  ]
+
+  #v(16pt)
+  #line(length: 100%, stroke: 0.5pt + rgb("#eeeeee"))
+  #v(8pt)
+  #align(center, text(size: 10pt, fill: rgb("#999999"))[#timestamp])
+]
 ```
 
-### 图片展示模板 (image_showcase.html)
+### 图片展示模板 (image_showcase.typ)
 
 专门用于展示多张图片的模板，支持网格布局和单图显示。
+
+```typst
+#let data = json(bytes(sys.inputs.at("data", default: "{}")))
+#let title = data.at("title", default: "图片展示")
+
+#set page(width: 700pt, height: auto, margin: 24pt, fill: white)
+#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", size: 14pt)
+
+#text(size: 20pt, weight: "bold")[#title]
+#v(14pt)
+
+// 收集所有 imageN 图片
+#let images = ()
+#for i in range(10) {
+  let key = "image" + str(i)
+  if key in data {
+    images.push(data.at(key))
+  }
+}
+
+#if images.len() > 0 [
+  #grid(
+    columns: 2,
+    gutter: 14pt,
+    ..images.map(uri => block(
+      fill: rgb("#f8f9fa"),
+      radius: 12pt,
+      inset: 10pt,
+      align(center, image(hex-to-bytes(uri), width: 100%, fit: "contain")),
+    )),
+  )
+] else [
+  #align(center, text(fill: gray)[暂无图片])
+]
+```
 
 ## 常见问题
 
@@ -251,7 +263,8 @@ A: 检查以下几点：
 1. 确保使用 `multipart/form-data` 格式
 2. 图片文件大小不超过 5MB
 3. 图片格式在支持列表中
-4. 模板中正确使用了 `{{ image }}` 变量
+4. 模板中使用了 `"image" in data` 存在性判断
+5. 模板中使用了 `"image" in data` 存在性判断，且 `hex-to-bytes` 辅助函数已定义
 
 ### Q: 如何上传多张图片？
 
@@ -266,93 +279,63 @@ files = {
 
 ### Q: 图片质量如何控制？
 
-A: 图片会保持原始质量转换为 base64。如需压缩，请在上传前处理图片。
+A: 图片会保持原始质量转换为 hex 字符串。如需压缩，请在上传前处理图片。最终输出图片的整体清晰度由插件配置的 PPI 档位控制（72/144/200/300）。
 
 ### Q: 支持动图吗？
 
-A: 支持 GIF 格式的动图，会保持动画效果。
+A: Typst 编译输出为静态 PNG 图片。GIF 文件可以上传和显示第一帧，但不保留动画效果。
 
 ### Q: 如何在模板中设置图片样式？
 
-A: 使用 CSS 控制图片显示：
+A: 使用 Typst 的 `image()` 函数参数：
 
-```css
-.uploaded-image {
-    max-width: 100%;
-    max-height: 400px;
-    object-fit: cover;
-    border-radius: 10px;
-}
+```typst
+// 宽度、高度、裁切方式
+#image(hex-to-bytes(data.at("image")), width: 80%, height: 200pt, fit: "cover")
+
+// 圆角裁剪
+#box(radius: 12pt, clip: true, image(hex-to-bytes(data.at("image")), width: 100%))
 ```
 
 ## 高级用法
 
-### 响应式图片
+### 响应式宽度
 
-```css
-.responsive-image {
-    width: 100%;
-    height: auto;
-    max-width: 600px;
-}
+```typst
+// 相对页面宽度
+#image(hex-to-bytes(data.at("image")), width: 80%)
 
-@media (max-width: 768px) {
-    .responsive-image {
-        max-width: 100%;
-    }
-}
-```
-
-### 图片懒加载效果
-
-```css
-.image-container {
-    opacity: 0;
-    animation: fadeIn 0.5s ease-in forwards;
-}
-
-@keyframes fadeIn {
-    to {
-        opacity: 1;
-    }
-}
+// 固定尺寸
+#image(hex-to-bytes(data.at("image")), width: 300pt)
 ```
 
 ### 图片网格布局
 
-```css
-.image-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin: 20px 0;
-}
+```typst
+#grid(
+  columns: (1fr, 1fr),  // 两列等宽
+  gutter: 16pt,
+  image(hex-to-bytes(data.at("image0")), width: 100%, fit: "cover"),
+  image(hex-to-bytes(data.at("image1")), width: 100%, fit: "cover"),
+  image(hex-to-bytes(data.at("image2")), width: 100%, fit: "cover"),
+)
+```
 
-.image-item {
-    position: relative;
-    overflow: hidden;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
+### 图片与文字混排
 
-.image-item img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.image-item:hover img {
-    transform: scale(1.05);
-}
+```typst
+#set align(center)
+#image(hex-to-bytes(data.at("image")), width: 40%)
+#v(8pt)
+#text(size: 10pt, fill: gray)[图片说明文字]
 ```
 
 ---
 
 ## 相关文档
 
-- [HTML模板书写指南](HTML_TEMPLATE_GUIDE.md)
-- [插件配置指南](TEMPLATE_CONFIG_GUIDE.md)
+- [Typst模板书写指南](TYPST_TEMPLATE_GUIDE.md)
+- [模板配置指南](TEMPLATE_CONFIG_GUIDE.md)
 - [部署指南](DEPLOYMENT.md)
 
 ---

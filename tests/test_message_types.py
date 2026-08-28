@@ -232,25 +232,25 @@ def test_mixed_message():
         print(f"❌ 测试失败: {e}")
 
 def test_template_message():
-    """测试传统HTML模板消息（无X-Message-Type头）"""
+    """测试传统Typst模板消息（无X-Message-Type头）"""
     
     base_url = "http://localhost:11451"
     api_path = "/api/render/image"
     
     headers = {
-        'X-Html-Template': 'notification',
+        'X-Template': 'notification',
         'X-Target-Type': 'group',
         'X-Target-Id': '000000000',
     }
     
     data = {
         'title': '兼容性测试',
-        'content': '测试在新版本中HTML模板功能是否正常工作',
+        'content': '测试在2.0.0版本中Typst模板功能是否正常工作',
         'timestamp': '2024-10-30 20:00:00'
     }
     
-    print("\n🚀 测试HTML模板消息（兼容性）...")
-    print(f"📋 模板: {headers['X-Html-Template']}")
+    print("\n🚀 测试Typst模板消息...")
+    print(f"📋 模板: {headers['X-Template']}")
     print(f"📝 标题: {data['title']}")
     print("-" * 50)
     
@@ -267,7 +267,7 @@ def test_template_message():
         if response.status_code == 200:
             result = response.json()
             if result.get('status') == 'success':
-                print("✅ HTML模板消息发送成功！")
+                print("✅ Typst模板消息发送成功！")
             else:
                 print(f"❌ 发送失败: {result.get('message')}")
         else:

@@ -34,7 +34,7 @@ def test_notification_template():
     url = f"{API_BASE_URL}{API_PATH}"
     headers = {
         "Authorization": f"Bearer {AUTH_TOKEN}",
-        "X-Html-Template": "notification",
+        "X-Template": "notification",
         "X-Target-Type": "group",
         "X-Target-Id": TARGET_GROUP_ID
     }
@@ -61,7 +61,7 @@ def test_private_message():
     url = f"{API_BASE_URL}{API_PATH}"
     headers = {
         "Authorization": f"Bearer {AUTH_TOKEN}",
-        "X-Html-Template": "notification",
+        "X-Template": "notification",
         "X-Target-Type": "private",
         "X-Target-Id": TARGET_USER_ID
     }
@@ -88,7 +88,7 @@ def test_authentication_error():
     url = f"{API_BASE_URL}{API_PATH}"
     headers = {
         "Authorization": "Bearer wrong_token",
-        "X-Html-Template": "notification",
+        "X-Template": "notification",
         "X-Target-Type": "group",
         "X-Target-Id": TARGET_GROUP_ID
     }
@@ -114,7 +114,7 @@ def test_missing_headers():
     url = f"{API_BASE_URL}{API_PATH}"
     headers = {
         "Authorization": f"Bearer {AUTH_TOKEN}",
-        # 故意缺少 X-Html-Template
+        # 故意缺少 X-Template
         "X-Target-Type": "group",
         "X-Target-Id": TARGET_GROUP_ID
     }
@@ -140,7 +140,7 @@ def test_nonexistent_template():
     url = f"{API_BASE_URL}{API_PATH}"
     headers = {
         "Authorization": f"Bearer {AUTH_TOKEN}",
-        "X-Html-Template": "nonexistent_template",
+        "X-Template": "nonexistent_template",
         "X-Target-Type": "group",
         "X-Target-Id": TARGET_GROUP_ID
     }

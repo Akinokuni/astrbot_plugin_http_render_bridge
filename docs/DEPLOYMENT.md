@@ -5,6 +5,9 @@
 - AstrBot v3.4.0 或更高版本
 - Python 3.8+
 - 支持的平台适配器（如 aiocqhttp）
+- Typst 渲染引擎（二选一，推荐安装 Python 绑定）：
+  - 官方 `typst` Python 绑定（`pip install typst`），内存编译，主渲染路径
+  - 系统安装 `typst` CLI，作为后备渲染路径
 
 ## 安装步骤
 
@@ -30,8 +33,22 @@ mkdir -p /path/to/astrbot/data/plugins/astrbot_plugin_http_render_bridge
 插件依赖会在 AstrBot 启动时自动安装，或者手动安装：
 
 ```bash
-pip install aiohttp>=3.8.0 jinja2>=3.1.0
+pip install aiohttp>=3.8.0 typst>=0.13.0
 ```
+
+推荐同时安装 Typst CLI 作为后备渲染路径（可选）：
+
+```bash
+# Windows: 下载 typst.exe 并加入 PATH（https://github.com/typst/typst/releases）
+# macOS: brew install typst
+# Linux: cargo install --locked typst-cli
+# 或下载预编译二进制放入 /usr/local/bin/
+
+# 验证安装
+typst --version
+```
+
+> 渲染引擎优先级：官方 `typst` Python 绑定（内存编译）→ `typst` CLI 子进程。绑定不可用时自动回退 CLI，两者都缺失时模板模式不可用（直接消息模式不受影响）。
 
 ### 3. 启动 AstrBot
 
@@ -60,11 +77,12 @@ python main.py
 
 #### 模板配置
 
-插件会自动创建默认的 `notification` 模板。你可以：
+插件会自动创建默认的 `notification` 模板（`notification.typ`）。你可以：
 
 1. 使用默认模板
 2. 修改默认模板
-3. 添加新的自定义模板
+3. 在 `templates/` 目录下添加新的 `.typ` 模板文件
+4. 通过配置 JSON 添加自定义模板（`typ_content` 字段）
 
 ### 5. 验证安装
 
@@ -138,20 +156,20 @@ python test_api.py
             "alias": "template_alias",
             "name": "模板显示名称",
             "description": "模板用途描述",
-            "html_content": "HTML模板内容，支持Jinja2语法",
-            "render_width": 800,
+            "typ_content": "Typst模板内容，通过 sys.inputs.at(\"data\") 读取注入数据",
             "render_quality": "high"
         }
     }
 }
 ```
 
-- `alias`: 模板别名，用于 API 请求中的 `X-Html-Template` 头
+- `alias`: 模板别名，用于 API 请求中的 `X-Template` 头
 - `name`: 模板显示名称，用于管理界面
 - `description`: 模板描述，帮助理解模板用途
-- `html_content`: HTML 模板内容，支持 Jinja2 语法
-- `render_width`: 渲染图片宽度（像素）
-- `render_quality`: 图片质量 (`high`/`medium`/`low`)
+- `typ_content`: Typst 模板内容（模板开头需读取 `sys.inputs.at("data")`）
+- `render_quality`: 图片质量 (`ultra`/`high`/`medium`/`low`，映射 300/200/144/72 PPI)
+
+> 模板文件也可以直接以 `.typ` 文件形式放在插件的 `templates/` 目录下，文件名即模板别名。
 
 ## 防火墙配置
 
@@ -275,9 +293,10 @@ fi
    - 确认模板别名是否存在
 
 3. **图片渲染失败**
-   - 检查 HTML 模板语法是否正确
-   - 验证 Jinja2 变量是否都有提供
-   - 查看 AstrBot 日志中的详细错误信息
+   - 检查 Typst 模板语法是否正确
+   - 验证模板开头是否读取了 `sys.inputs.at("data")`
+   - 确认已安装 `typst` Python 包或 CLI（`pip show typst` / `typst --version`）
+   - 查看 AstrBot 日志中 Typst 错误信息（含精确行列号）
 
 4. **消息发送失败**
    - 确认 AstrBot 平台适配器正常工作
@@ -294,8 +313,8 @@ fi
 
 ### 性能优化
 
-1. **模板缓存**: 插件会自动缓存编译后的模板
-2. **图片质量**: 根据需要调整图片质量设置
+1. **渲染引擎**: 优先使用 `typst` Python 绑定（内存编译，无进程启动开销）；CLI 后备模式性能略低
+2. **PPI 档位**: 根据需要调整图片质量设置（72/144/200/300 PPI）
 3. **并发限制**: 如果需要，可以在反向代理中设置并发限制
 
 ## 安全建议

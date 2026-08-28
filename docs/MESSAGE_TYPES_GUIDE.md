@@ -6,7 +6,7 @@
 
 插件现在支持两种工作模式：
 
-1. **HTML模板渲染模式**（默认）- 传统的HTML模板渲染功能
+1. **Typst模板渲染模式**（默认）- 将动态数据编译为 PNG 图片发送
 2. **直接消息发送模式** - 直接发送各种NapCat消息类型
 
 ## 使用方法
@@ -15,7 +15,7 @@
 
 通过 `X-Message-Type` 请求头来选择消息类型：
 
-- **不设置** 或 **设置为 `template`** - 使用HTML模板渲染
+- **不设置** 或 **设置为 `template`** - 使用Typst模板渲染
 - **设置为其他值** - 直接发送对应类型的消息
 
 ### 基本请求格式
@@ -367,27 +367,27 @@ curl -X POST http://localhost:11451/api/render/image \
   -F "at=987654321"
 ```
 
-### 15. HTML模板渲染 (`template` 或不设置)
+### 15. Typst模板渲染 (`template` 或不设置)
 
-传统的HTML模板渲染功能。
+Typst模板渲染功能。
 
 **请求头:**
 ```
-X-Html-Template: notification
+X-Template: notification
 # X-Message-Type 不设置或设置为 template
 ```
 
 **参数:**
-根据模板需要的参数
+根据模板需要的参数，插件将全部表单字段聚合为 JSON 注入模板（详见 [Typst模板书写指南](TYPST_TEMPLATE_GUIDE.md)）
 
 **示例:**
 ```bash
 curl -X POST http://localhost:11451/api/render/image \
-  -H "X-Html-Template: notification" \
+  -H "X-Template: notification" \
   -H "X-Target-Type: group" \
   -H "X-Target-Id: 123456789" \
   -F "title=系统通知" \
-  -F "content=这是一条HTML模板渲染的消息"
+  -F "content=这是一条Typst模板渲染的消息"
 ```
 
 ## Python 示例
@@ -552,12 +552,12 @@ sender.send_mixed(
 
 ### Q: 如何保持向后兼容性？
 
-A: 不设置 `X-Message-Type` 头或设置为 `template` 时，插件会使用传统的HTML模板渲染功能。
+A: 不设置 `X-Message-Type` 头或设置为 `template` 时，插件使用 Typst 模板渲染功能。模板渲染模式使用的请求头为 `X-Template`。
 
 ### Q: 支持哪些文件格式？
 
 A:
-- 图片：JPG, PNG, GIF, WebP, BMP
+- 图片：JPG, PNG, GIF, WebP
 - 语音：MP3, WAV, AMR等（取决于NapCat支持）
 - 视频：MP4, AVI等（取决于NapCat支持）
 
@@ -581,17 +581,17 @@ A: 是的，通过 `X-Target-Type` 头指定：
 2. **文件管理**: 及时关闭上传的文件句柄
 3. **参数验证**: 发送前验证必需参数
 4. **日志监控**: 关注插件日志以便调试
-5. **兼容性**: 保持对旧版本API的兼容性
+5. **命名规范**: 使用当前版本的请求头与字段命名（`X-Template`、`typ_content`）
 
 ---
 
 ## 相关文档
 
 - [NapCat消息格式文档](https://napcat.napneko.icu/develop/msg)
-- [HTML模板书写指南](HTML_TEMPLATE_GUIDE.md)
+- [Typst模板书写指南](TYPST_TEMPLATE_GUIDE.md)
 - [图片上传功能指南](IMAGE_UPLOAD_GUIDE.md)
 - [插件部署指南](DEPLOYMENT.md)
 
 ---
 
-**提示**: 这个功能完全向后兼容，现有的HTML模板渲染功能不受影响。
+**提示**: 直接消息发送模式不依赖渲染引擎；模板渲染模式（`template`）使用 Typst 引擎。

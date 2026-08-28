@@ -8,15 +8,72 @@ from urllib.parse import quote
 
 import aiohttp
 from aiohttp import web, MultipartReader
-from jinja2 import Template, TemplateError
 
 from astrbot.api import logger
 from astrbot.api.star import Context, Star, register
 from astrbot.core.config import AstrBotConfig
 
+# Typst 渲染引擎：官方 Python 绑定为主渲染路径
+# 绑定不可用时回退到系统安装的 typst CLI（见 _compile_typst_with_cli）
+try:
+    import typst
+    TYPST_BINDING_AVAILABLE = True
+except ImportError:
+    typst = None
+    TYPST_BINDING_AVAILABLE = False
 
-async def fetch_qr_code_as_base64(url: str) -> str:
-    """从在线API获取二维码的base64编码（参考http_forwarder项目）"""
+# 渲染质量档位到 PPI 的映射（PPI 决定输出像素宽度：页面宽度(pt) / 72 × PPI）
+QUALITY_PPI_MAP = {
+    'low': 72,
+    'medium': 144,
+    'high': 200,
+    'ultra': 300,
+}
+DEFAULT_QUALITY = 'high'
+
+
+def _compile_typst_with_binding(source: str, ppi: int, data_json: str) -> bytes:
+    """使用官方 typst Python 绑定在内存中编译模板为 PNG（主渲染路径）
+
+    :param source: Typst 模板源码
+    :param ppi: 输出图片的 PPI
+    :param data_json: 注入模板的数据（sys.inputs 的 data 参数）
+    :return: PNG 图片字节
+    """
+    png_bytes = typst.compile(
+        source.encode('utf-8'),
+        format='png',
+        ppi=ppi,
+        sys_inputs={'data': data_json},
+    )
+    return bytes(png_bytes)
+
+
+async def _compile_typst_with_cli(source: str, ppi: int, data_json: str) -> bytes:
+    """使用 typst CLI 子进程编译模板为 PNG（后备渲染路径）
+
+    模板源码通过 stdin（输入 `-`）传递，PNG 从 stdout（输出 `-`）读取，
+    不落盘临时文件。data 参数通过 --input 直接传入 argv，不经过 shell。
+    """
+    proc = await asyncio.create_subprocess_exec(
+        'typst', 'compile',
+        '--format', 'png',
+        '--ppi', str(ppi),
+        '--input', f'data={data_json}',
+        '-', '-',
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await proc.communicate(source.encode('utf-8'))
+    if proc.returncode != 0:
+        error_detail = stderr.decode('utf-8', errors='replace').strip()
+        raise RuntimeError(f'typst CLI 编译失败: {error_detail}')
+    return stdout
+
+
+async def fetch_qr_code_as_hex(url: str) -> str:
+    """从在线API获取二维码图片，返回hex字符串（模板通过hex-to-bytes解码为图片）"""
     try:
         # 构建二维码API URL
         encoded_url = quote(url, safe='')
@@ -27,9 +84,9 @@ async def fetch_qr_code_as_base64(url: str) -> str:
             async with session.get(qr_api_url, timeout=10) as response:
                 response.raise_for_status()
                 image_data = await response.read()
-                encoded_image = base64.b64encode(image_data).decode('utf-8')
-                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 二维码Base64字符串长度: {len(encoded_image)}")
-                return encoded_image
+                hex_image = image_data.hex()
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 二维码hex字符串长度: {len(hex_image)}")
+                return hex_image
     except aiohttp.ClientError as e:
         logger.error(f"[AstrBot Plugin HTTP Render Bridge] 从 {url} 获取二维码时网络错误: {e}")
         return ""
@@ -50,32 +107,20 @@ async def process_uploaded_image(filename: str, file_data: bytes) -> Optional[Di
             logger.error(f"[AstrBot Plugin HTTP Render Bridge] 图片文件过大: {len(file_data)} bytes > {max_size} bytes")
             return None
         
-        # 检查文件扩展名
-        allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'}
+        # 检查文件扩展名（Typst 支持 png/jpg/gif/webp/svg）
+        allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
         file_ext = os.path.splitext(filename.lower())[1]
         if file_ext not in allowed_extensions:
             logger.error(f"[AstrBot Plugin HTTP Render Bridge] 不支持的图片格式: {file_ext}")
             return None
         
-        # 转换为base64
-        base64_data = base64.b64encode(file_data).decode('utf-8')
-        
-        # 确定MIME类型
-        mime_types = {
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg', 
-            '.png': 'image/png',
-            '.gif': 'image/gif',
-            '.webp': 'image/webp',
-            '.bmp': 'image/bmp'
-        }
-        mime_type = mime_types.get(file_ext, 'image/jpeg')
+        # 转换为hex字符串（Typst模板通过hex-to-bytes解码）
+        hex_data = file_data.hex()
         
         return {
             'filename': filename,
             'size': len(file_data),
-            'mime_type': mime_type,
-            'base64': f"data:{mime_type};base64,{base64_data}"
+            'hex': hex_data
         }
         
     except Exception as e:
@@ -87,7 +132,7 @@ async def process_uploaded_image(filename: str, file_data: bytes) -> Optional[Di
     'astrbot_plugin_http_render_bridge',
     'Kiro AI Assistant',
     'HTTP Render Bridge Plugin',
-    '1.0.0',
+    '2.0.0',
     'https://github.com/Akinokuni/astrbot_plugin_http_render_bridge'
 )
 class HttpRenderBridge(Star):
@@ -113,46 +158,56 @@ class HttpRenderBridge(Star):
         self._reload_templates()
 
     def _reload_templates(self):
-        """重新加载模板缓存"""
+        """重新加载模板缓存：扫描 templates/ 目录的 .typ 文件 + 配置中的自定义模板"""
         self.templates_cache.clear()
-        
-        # 调试：打印配置内容
-        logger.info(f"[AstrBot Plugin HTTP Render Bridge] 配置内容: {dict(self.config)}")
-        
+
         # 获取插件目录路径
         plugin_dir = os.path.dirname(os.path.abspath(__file__))
         templates_dir = os.path.join(plugin_dir, 'templates')
-        
-        # 注意：render_width和render_quality参数已移除，因为AstrBot的html_render方法不支持这些选项
-        
-        # 自动扫描templates目录下的所有HTML文件
+
+        # 自动扫描templates目录下的所有Typst模板文件
         if os.path.exists(templates_dir):
             try:
                 for filename in os.listdir(templates_dir):
-                    if filename.endswith('.html'):
-                        template_name = filename[:-5]  # 移除.html后缀
+                    if filename.endswith('.typ'):
+                        template_name = filename[:-4]  # 移除.typ后缀
                         template_file = os.path.join(templates_dir, filename)
-                        
+
                         try:
                             with open(template_file, 'r', encoding='utf-8') as f:
-                                html_content = f.read()
-                            
+                                typ_content = f.read()
+
                             self.templates_cache[template_name] = {
-                                'template': Template(html_content),
+                                'typ_content': typ_content,
                                 'name': f'{template_name.title()}模板',
-                                'description': f'基于{filename}的模板',
-                                'file': filename
+                                'description': f'基于{filename}的Typst模板',
+                                'file': filename,
+                                'render_quality': DEFAULT_QUALITY,
                             }
                             logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载模板: {template_name} ({filename})")
-                            
+
                         except Exception as e:
                             logger.error(f"[AstrBot Plugin HTTP Render Bridge] 加载模板文件 {filename} 失败: {e}")
-                            
+
             except Exception as e:
                 logger.error(f"[AstrBot Plugin HTTP Render Bridge] 扫描模板目录失败: {e}")
         else:
             logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板目录不存在: {templates_dir}")
-        
+
+        # 加载配置中的自定义模板（typ_content 字段）
+        custom_templates = self.config.get('templates', {})
+        if isinstance(custom_templates, dict):
+            for alias, tpl in custom_templates.items():
+                if isinstance(tpl, dict) and tpl.get('typ_content'):
+                    self.templates_cache[alias] = {
+                        'typ_content': tpl['typ_content'],
+                        'name': tpl.get('name', f'{alias}模板'),
+                        'description': tpl.get('description', '自定义Typst模板'),
+                        'file': f'{alias}.typ',
+                        'render_quality': tpl.get('render_quality', DEFAULT_QUALITY),
+                    }
+                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 已加载自定义模板: {alias}")
+
         # 确保至少有一个可用的模板
         if not self.templates_cache:
             logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 没有找到任何可用的模板文件")
@@ -192,32 +247,33 @@ class HttpRenderBridge(Star):
         for name, info in self.templates_cache.items():
             available_templates.append({
                 'name': name,
-                'file': info.get('file', f'{name}.html'),
+                'file': info.get('file', f'{name}.typ'),
                 'description': info.get('description', '')
             })
         
         return web.json_response({
             'status': 'ok',
             'plugin': 'astrbot_plugin_http_render_bridge',
-            'version': '1.0.0',
+            'version': '2.0.0',
+            'render_engine': 'Typst',
             'templates_count': len(self.templates_cache),
             'available_templates': available_templates,
             'timestamp': datetime.now().isoformat()
         })
 
     async def render_handler(self, request: web.Request):
-        """主要的消息处理器 - 支持HTML模板渲染和直接消息发送"""
+        """主要的消息处理器 - 支持Typst模板渲染和直接消息发送"""
         try:
             # 1. 认证检查
             auth_result = self._check_authentication(request)
             if auth_result:
                 return auth_result
-            
+
             # 2. 检查消息类型
             message_type = request.headers.get('X-Message-Type', 'template')
-            
+
             if message_type == 'template':
-                # 传统的HTML模板渲染模式
+                # Typst模板渲染模式
                 return await self._handle_template_render(request)
             else:
                 # 直接消息发送模式
@@ -231,43 +287,43 @@ class HttpRenderBridge(Star):
             }, status=500)
 
     async def _handle_template_render(self, request: web.Request):
-        """处理HTML模板渲染请求"""
+        """处理Typst模板渲染请求"""
         try:
             # 验证请求头
             headers_result = self._validate_headers(request)
             if isinstance(headers_result, web.Response):
                 return headers_result
-            
+
             template_alias, target_type, target_id = headers_result
-            
+
             # 解析请求体
             form_data = await self._parse_form_data(request)
             if isinstance(form_data, web.Response):
                 return form_data
-            
-            # 渲染图片
-            image_url = await self._render_template_to_image(template_alias, form_data)
-            if not image_url:
+
+            # 渲染图片（返回 PNG 字节）
+            image_bytes = await self._render_template_to_image(template_alias, form_data)
+            if not image_bytes:
                 return web.json_response({
                     'status': 'error',
                     'message': 'Failed to render template to image'
                 }, status=500)
-            
+
             # 发送消息
-            send_result = await self._send_message(target_type, target_id, image_url)
+            send_result = await self._send_message(target_type, target_id, image_bytes)
             if not send_result:
                 return web.json_response({
                     'status': 'error',
                     'message': 'Failed to send message to target'
                 }, status=500)
-            
+
             return web.json_response({
                 'status': 'success',
                 'message': 'Image sent successfully',
                 'template_used': template_alias,
                 'target': f"{target_type}:{target_id}"
             })
-            
+
         except Exception as e:
             logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板渲染处理失败: {e}")
             return web.json_response({
@@ -349,18 +405,18 @@ class HttpRenderBridge(Star):
 
     def _validate_headers(self, request: web.Request):
         """验证必需的请求头"""
-        # 检查X-Html-Template
-        template_name = request.headers.get('X-Html-Template')
+        # 检查X-Template
+        template_name = request.headers.get('X-Template')
         if not template_name:
             return web.json_response({
                 'status': 'error',
-                'message': "Header 'X-Html-Template' is missing"
+                'message': "Header 'X-Template' is missing"
             }, status=400)
-        
-        # 如果包含.html后缀，移除它
-        if template_name.endswith('.html'):
-            template_name = template_name[:-5]
-        
+
+        # 如果包含.typ后缀，移除它
+        if template_name.endswith('.typ'):
+            template_name = template_name[:-4]
+
         if template_name not in self.templates_cache:
             available_templates = list(self.templates_cache.keys())
             return web.json_response({
@@ -412,8 +468,8 @@ class HttpRenderBridge(Star):
                         file_data = await field.read()
                         file_info = await process_uploaded_image(field.filename, file_data)
                         if file_info:
-                            # 使用字段名作为键，存储图片的base64数据
-                            form_data[field.name] = file_info['base64']
+                            # 使用字段名作为键，存储图片的hex数据
+                            form_data[field.name] = file_info['hex']
                             # 同时存储文件信息
                             form_data[f"{field.name}_filename"] = file_info['filename']
                             form_data[f"{field.name}_size"] = file_info['size']
@@ -435,123 +491,91 @@ class HttpRenderBridge(Star):
                 'message': 'Failed to parse form data'
             }, status=400)
 
-    async def _render_template_to_image(self, template_alias: str, data: Dict[str, Any]) -> Optional[str]:
-        """渲染模板为图片 - 直接使用HTML本地渲染"""
+    async def _render_template_to_image(self, template_alias: str, data: Dict[str, Any]) -> Optional[bytes]:
+        """渲染Typst模板为PNG图片字节
+
+        数据注入方式：请求体数据聚合为 JSON 字符串，通过 sys.inputs 的
+        data 单一入口注入模板（模板内使用 json(bytes(...)) 解析）。
+        """
         try:
             template_info = self.templates_cache.get(template_alias)
             if not template_info:
                 logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板 {template_alias} 不存在")
                 return None
-            
+
             # 处理二维码生成
             render_data = data.copy()
-            
+
             # 如果传入了link参数，自动生成二维码
             if 'link' in data and data['link']:
                 link_url = data['link']
                 logger.info(f"[AstrBot Plugin HTTP Render Bridge] 检测到link参数，生成二维码: {link_url}")
-                
-                qr_base64 = await fetch_qr_code_as_base64(link_url)
-                if qr_base64:
-                    render_data['qr_code_base64'] = qr_base64
-                    # 如果没有提供qr_text，让模板使用自己的默认值
-                    # 不在这里设置默认值，让Jinja2模板的default过滤器处理
+
+                qr_hex = await fetch_qr_code_as_hex(link_url)
+                if qr_hex:
+                    render_data['qr_code'] = qr_hex
                     logger.info(f"[AstrBot Plugin HTTP Render Bridge] 二维码生成成功，已添加到渲染数据")
                 else:
                     logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 二维码生成失败，将不显示二维码")
-            
-            # 渲染HTML
-            template = template_info['template']
-            html_content = template.render(**render_data)
-            
-            # 完全按照http_forwarder的方式进行渲染
-            try:
-                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 尝试渲染HTML为图片")
-                image_url = await self.html_render(html_content, data)
-                logger.info(f"[AstrBot Plugin HTTP Render Bridge] html_render返回URL: {image_url}")
-                return image_url
-                
-            except Exception as render_error:
-                logger.error(f"[AstrBot Plugin HTTP Render Bridge] HTML本地渲染失败: {render_error}")
-                # 如果HTML渲染失败，尝试Markdown作为后备方案
+
+            # 请求体数据聚合为 JSON 字符串（sys.inputs 的 data 单一入口）
+            data_json = json.dumps(render_data, ensure_ascii=False)
+
+            source = template_info['typ_content']
+            quality = template_info.get('render_quality', DEFAULT_QUALITY)
+            ppi = QUALITY_PPI_MAP.get(quality, QUALITY_PPI_MAP[DEFAULT_QUALITY])
+
+            # 主渲染路径：官方 typst Python 绑定（内存编译）
+            if TYPST_BINDING_AVAILABLE:
                 try:
-                    markdown_content = self._html_to_markdown(html_content, data)
-                    image_path = await self.html_render(markdown_content, {}, return_url=False)
-                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] Markdown后备渲染成功: {image_path}")
-                    return image_path
-                except Exception as fallback_error:
-                    logger.error(f"[AstrBot Plugin HTTP Render Bridge] Markdown后备渲染也失败: {fallback_error}")
-                    return None
-            
-        except TemplateError as e:
-            logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板渲染错误: {e}")
-            return None
+                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 使用 typst Python 绑定渲染（{quality}, {ppi} PPI）")
+                    loop = asyncio.get_event_loop()
+                    return await loop.run_in_executor(None, _compile_typst_with_binding, source, ppi, data_json)
+                except Exception as binding_error:
+                    logger.warning(f"[AstrBot Plugin HTTP Render Bridge] typst Python 绑定渲染失败，回退 CLI: {binding_error}")
+
+            # 后备渲染路径：typst CLI 子进程
+            try:
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 使用 typst CLI 渲染（{quality}, {ppi} PPI）")
+                return await _compile_typst_with_cli(source, ppi, data_json)
+            except FileNotFoundError:
+                logger.error("[AstrBot Plugin HTTP Render Bridge] typst CLI 不可用且 Python 绑定未安装，模板渲染模式不可用")
+                return None
+            except Exception as cli_error:
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] typst CLI 渲染失败: {cli_error}")
+                return None
+
         except Exception as e:
             logger.error(f"[AstrBot Plugin HTTP Render Bridge] 渲染图片时发生错误: {e}")
             return None
 
-    def _html_to_markdown(self, html_content: str, data: Dict[str, Any]) -> str:
-        """将HTML内容转换为Markdown格式，仅作为HTML渲染失败时的后备方案"""
-        # 提取关键数据
-        title = data.get('title', '通知')
-        content = data.get('content', '这是一条通知消息')
-        timestamp = data.get('timestamp', '刚刚')
-        
-        # 构建美观的Markdown作为后备方案
-        markdown = f"""# 📢 {title}
-
----
-
-{content}
-
----
-
-🕒 **时间**: {timestamp}
-
----
-*由 AstrBot HTTP 渲染桥梁插件生成（后备渲染）*"""
-        
-        return markdown
-
-    async def _send_message(self, target_type: str, target_id: str, image_path: str) -> bool:
-        """发送消息到指定目标"""
+    async def _send_message(self, target_type: str, target_id: str, image_bytes: bytes) -> bool:
+        """将渲染出的PNG图片字节发送到指定目标"""
         try:
             # 获取平台实例（参考http_forwarder的做法）
             platforms = self.context.platform_manager.get_insts()
             if not platforms:
                 logger.error(f"[AstrBot Plugin HTTP Render Bridge] 没有找到可用的平台实例")
                 return False
-            
+
             # 使用第一个可用的平台实例
             platform_inst = platforms[0]
             client = platform_inst.get_client()
-            
+
             if not client:
                 logger.error(f"[AstrBot Plugin HTTP Render Bridge] 平台客户端不可用")
                 return False
-            
+
             # 检查渲染结果
-            if not image_path:
+            if not image_bytes:
                 logger.error(f"[AstrBot Plugin HTTP Render Bridge] 渲染返回空结果")
                 return False
-            
-            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 准备发送图片: {image_path}")
-            
-            # 如果是本地文件路径，尝试转换为base64数据URI
-            if not image_path.startswith('http') and os.path.exists(image_path):
-                try:
-                    import base64
-                    with open(image_path, 'rb') as f:
-                        image_data = f.read()
-                    base64_data = base64.b64encode(image_data).decode('utf-8')
-                    file_data = f"base64://{base64_data}"
-                    logger.info(f"[AstrBot Plugin HTTP Render Bridge] 转换为base64数据URI，长度: {len(base64_data)}")
-                except Exception as e:
-                    logger.warning(f"[AstrBot Plugin HTTP Render Bridge] base64转换失败，使用原路径: {e}")
-                    file_data = image_path
-            else:
-                file_data = image_path
-            
+
+            # PNG字节转换为OneBot的base64数据格式
+            base64_data = base64.b64encode(image_bytes).decode('utf-8')
+            file_data = f"base64://{base64_data}"
+            logger.info(f"[AstrBot Plugin HTTP Render Bridge] 准备发送图片，大小: {len(image_bytes)} bytes")
+
             # 构建OneBot v11格式的消息
             message_data = [{'type': 'image', 'data': {'file': file_data}}]
             

@@ -18,5 +18,15 @@
         "description": "HTTP服务端口",
         "type": "int",
         "default": 11451
+    },
+    "render_quality": {
+        "description": "默认渲染质量（low/medium/high/ultra，映射 72/144/200/300 PPI）",
+        "type": "string",
+        "default": "high"
+    },
+    "templates": {
+        "description": "自定义模板（JSON对象：别名 -> {name, description, typ_content, render_quality}）",
+        "type": "object",
+        "default": {}
     }
 }

@@ -132,3 +132,6 @@ Thumbs.db
 *.tmp
 *.temp
 *.bak
+
+# 测试输出（生成的 PNG 图片）
+tests/output/

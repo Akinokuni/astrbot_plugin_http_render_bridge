@@ -23,7 +23,7 @@
 | 请求头 | 类型 | 说明 | 默认值 |
 |--------|------|------|-------|
 | `X-Message-Type` | string | 消息类型 | `template` |
-| `X-Html-Template` | string | HTML模板名 | 仅模板模式需要 |
+| `X-Template` | string | Typst模板名 | 仅模板模式需要 |
 | `Authorization` | string | Bearer Token认证 | 可选 |
 
 ## API 端点
@@ -34,7 +34,7 @@
 
 发送消息的主要接口，支持两种模式：
 
-1. **HTML模板渲染模式** (默认)
+1. **Typst模板渲染模式** (默认)
 2. **直接消息发送模式**
 
 **请求格式:**
@@ -79,8 +79,8 @@ GET /health
     "available_templates": [
         {
             "name": "notification",
-            "file": "notification.html",
-            "description": "基于notification.html的模板"
+            "file": "notification.typ",
+            "description": "基于notification.typ的模板"
         }
     ],
     "timestamp": "2024-10-30T18:00:00.000Z"
@@ -89,20 +89,20 @@ GET /health
 
 ## 消息类型详细说明
 
-### HTML模板渲染 (template)
+### Typst模板渲染 (template)
 
 **请求头:**
 ```
-X-Html-Template: notification
+X-Template: notification
 # X-Message-Type 不设置或设置为 template
 ```
 
-**参数:** 根据模板需要
+**参数:** 根据模板需要。插件将所有表单字段聚合为 JSON 字符串，通过 `data` 单一入口注入模板（详见 [Typst模板书写指南](TYPST_TEMPLATE_GUIDE.md)）。
 
 **示例:**
 ```bash
 curl -X POST http://localhost:11451/api/render/image \
-  -H "X-Html-Template: notification" \
+  -H "X-Template: notification" \
   -H "X-Target-Type: group" \
   -H "X-Target-Id: 123456789" \
   -F "title=系统通知" \
@@ -140,7 +140,7 @@ X-Message-Type: image
 - `image` (file, 可选) - 图片文件
 - `url` (string, 可选) - 图片URL
 
-**支持格式:** JPG, PNG, GIF, WebP, BMP
+**支持格式:** JPG, PNG, GIF, WebP
 **大小限制:** 5MB
 
 **示例:**
@@ -364,9 +364,9 @@ curl -X POST http://localhost:11451/api/render/image \
 
 | 状态码 | 说明 | 可能原因 |
 |--------|------|----------|
-| 400 | 请求参数错误 | 缺少必需参数、参数格式错误 |
+| 400 | 请求参数错误 | 缺少必需参数、参数格式错误、模板不存在 |
 | 401 | 认证失败 | Token无效或缺失 |
-| 500 | 服务器内部错误 | 渲染失败、发送失败 |
+| 500 | 服务器内部错误 | Typst编译失败、发送失败 |
 
 ## 认证机制
 
@@ -392,7 +392,7 @@ Authorization: Bearer YOUR_TOKEN_HERE
 
 ### 支持的文件格式
 
-- **图片**: JPG, JPEG, PNG, GIF, WebP, BMP
+- **图片**: JPG, JPEG, PNG, GIF, WebP
 - **语音**: MP3, WAV, AMR等
 - **视频**: MP4, AVI等
 
@@ -480,6 +480,6 @@ curl -X GET http://localhost:11451/health
 ## 相关文档
 
 - [消息类型详细指南](MESSAGE_TYPES_GUIDE.md)
-- [HTML模板开发指南](HTML_TEMPLATE_GUIDE.md)
+- [Typst模板开发指南](TYPST_TEMPLATE_GUIDE.md)
 - [图片上传功能指南](IMAGE_UPLOAD_GUIDE.md)
 - [部署和配置指南](DEPLOYMENT.md)

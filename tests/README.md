@@ -11,7 +11,7 @@
 | `test_api.py` | 基础API接口测试 | `python test_api.py` |
 | `test_health.py` | 健康检查测试 | `python test_health.py` |
 | `test_local_render.py` | 本地渲染功能测试 | `python test_local_render.py` |
-| `test_templates.py` | HTML模板渲染测试 | `python test_templates.py` |
+| `test_templates.py` | Typst模板渲染测试 | `python test_templates.py` |
 | `test_render_only.py` | 纯渲染测试（不发送） | `python test_render_only.py` |
 | `test_with_auth.py` | 认证功能测试 | `python test_with_auth.py` |
 
@@ -217,4 +217,4 @@ if __name__ == "__main__":
 
 - [API参考文档](../docs/API_REFERENCE.md)
 - [测试指南](../docs/TESTING_GUIDE.md)
-- [HTML模板指南](../docs/HTML_TEMPLATE_GUIDE.md)
+- [Typst模板指南](../docs/TYPST_TEMPLATE_GUIDE.md)

@@ -9,6 +9,32 @@
 - 文档整理到 `docs/` 目录
 - 新增文档中心和API参考
 
+## [2.0.0] - 2026-08-28
+
+### 模板系统
+- **渲染引擎** - 模板渲染引擎为 [Typst](https://typst.app/)（1.x 使用 HTML/Jinja2）
+- 模板文件格式为 `.typ`，模板语法为 Typst 原生语法
+- 请求头为 `X-Template`（1.x 为 `X-Html-Template`）
+- 配置字段为 `typ_content` 与 `render_quality`；版式宽度由模板 `#set page(width: ...)` 控制（1.x 的 `html_content` 与 `render_width` 字段已停用）
+
+### 新增功能
+- **双渲染路径** - 官方 `typst` Python 绑定（内存编译）为主，`typst` CLI 子进程为后备
+- **JSON 单入口数据注入** - 请求体聚合为 JSON 字符串，通过 `sys.inputs` 的 `data` 参数注入模板
+- **质量档位映射 PPI** - `low/medium/high/ultra` 映射 72/144/200/300 PPI
+- **Typst 排版能力** - 支持表格、渐变、网格、公式等完整 Typst 排版特性
+- [Typst模板书写指南](TYPST_TEMPLATE_GUIDE.md)
+
+### 改进
+- 中文排版：模板内 `#set text(lang: "zh")` 实现正确中文断行
+- 图片以 hex 字符串注入，模板通过 `hex-to-bytes` 辅助函数 + `image()` 函数显示
+- 二维码生成结果注入为 `qr_code` 字段（hex 字符串）
+- Typst 编译失败时直接返回错误信息（含精确行列号）
+
+### 升级须知
+- 1.x 的 `.html` 模板需要改写为 `.typ` 格式
+- 调用方请求头需要更新为 `X-Template`
+- 1.x 的 Jinja2 语法（`{{变量}}`、`{% if %}`）在 2.0 中不可用，由 Typst 脚本语法承担
+
 ## [1.3.0] - 2024-10-30
 
 ### 新增功能
@@ -106,9 +132,10 @@
 4. **性能优先** - 本地处理，内存操作，高效稳定
 
 ### 技术选择
-- **Jinja2** - 强大的模板引擎，支持复杂逻辑
+- **Typst** - 现代排版系统，编译为 PNG，支持中英文混排
+- **typst-py** - 官方 Python 绑定，内存编译（主渲染路径）
+- **typst CLI** - 子进程后备渲染路径
 - **aiohttp** - 异步HTTP服务器，高性能处理
-- **本地渲染** - 避免网络依赖，提高稳定性
 - **multipart/form-data** - 支持文件上传和复杂数据
 
 ### 架构演进
@@ -116,6 +143,7 @@
 2. **v1.1** - 添加二维码自动生成
 3. **v1.2** - 添加图片上传支持
 4. **v1.3** - 添加NapCat消息类型支持
+5. **v2.0** - Typst 渲染引擎，双渲染路径
 
 ---
 

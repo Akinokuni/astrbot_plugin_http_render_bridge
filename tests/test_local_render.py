@@ -26,7 +26,7 @@ def test_local_render():
     
     # 请求头
     headers = {
-        'X-Html-Template': 'notification',
+        'X-Template': 'notification',
         'X-Target-Type': 'group',
         'X-Target-Id': '123456789',
         'Content-Type': 'multipart/form-data'
@@ -34,7 +34,7 @@ def test_local_render():
     
     print("🚀 开始测试本地渲染功能...")
     print(f"📡 API地址: {base_url}{api_path}")
-    print(f"📋 模板: {headers['X-Html-Template']}")
+    print(f"📋 模板: {headers['X-Template']}")
     print(f"🎯 目标: {headers['X-Target-Type']}:{headers['X-Target-Id']}")
     print(f"📝 数据: {json.dumps(test_data, ensure_ascii=False, indent=2)}")
     print("-" * 50)

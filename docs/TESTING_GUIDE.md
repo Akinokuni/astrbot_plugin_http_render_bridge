@@ -5,6 +5,7 @@
 ### 1. 确认环境
 - AstrBot已启动并运行
 - HTTP渲染桥梁插件已安装并启用
+- `typst` Python 绑定或 Typst CLI 已安装（模板模式必需）
 - Docker环境正常（如果使用Docker）
 
 ### 2. 插件配置
@@ -16,8 +17,7 @@
 | 认证令牌 | `test_token_123` | 测试用令牌 |
 | 服务监听地址 | `0.0.0.0` | 监听所有接口 |
 | 服务端口 | `11451` | 默认端口 |
-| 默认渲染宽度 | `800` | 像素 |
-| 默认图片质量 | `high` | 高质量 |
+| 图片质量 | `high` | 200 PPI |
 
 ## 测试步骤
 
@@ -42,12 +42,12 @@ python test_health.py
    - 时间戳: 2024-01-01T12:00:00
 
  可用模板 (6个):
-   - notification (notification.html): 基于notification.html的模板
-   - alert (alert.html): 基于alert.html的模板
-   - success (success.html): 基于success.html的模板
-   - nomination (nomination.html): 基于nomination.html的模板
-   - report (report.html): 基于report.html的模板
-   - default (default.html): 基于default.html的模板
+   - notification (notification.typ): 基于notification.typ的模板
+   - alert (alert.typ): 基于alert.typ的模板
+   - success (success.typ): 基于success.typ的模板
+   - nomination (nomination.typ): 基于nomination.typ的模板
+   - report (report.typ): 基于report.typ的模板
+   - default (default.typ): 基于default.typ的模板
 
  健康检查通过! 可以开始API测试
 ```
@@ -74,13 +74,13 @@ python test_templates.py
 
 ```bash
 # 测试通知模板
-curl -X POST http://localhost:11451/api/render/image \\
-  -H "Authorization: Bearer test_token_123" \\
-  -H "X-Html-Template: notification" \\
-  -H "X-Target-Type: group" \\
-  -H "X-Target-Id: 123456789" \\
-  -F "title=手动测试" \\
-  -F "content=这是手动API测试消息" \\
+curl -X POST http://localhost:11451/api/render/image \
+  -H "Authorization: Bearer test_token_123" \
+  -H "X-Template: notification" \
+  -H "X-Target-Type: group" \
+  -H "X-Target-Id: 123456789" \
+  -F "title=手动测试" \
+  -F "content=这是手动API测试消息" \
   -F "timestamp=$(date)"
 ```
 
@@ -109,7 +109,7 @@ curl -X POST http://localhost:11451/api/render/image \\
 **症状**: `Template 'xxx' not found`
 
 **解决方案**:
-- 检查templates目录下是否有对应的HTML文件
+- 检查templates目录下是否有对应的 .typ 文件
 - 确认文件名拼写正确
 - 重启插件以重新扫描模板文件
 
@@ -117,10 +117,10 @@ curl -X POST http://localhost:11451/api/render/image \\
 **症状**: `Failed to render template to image`
 
 **解决方案**:
-- 检查HTML模板语法是否正确
-- 确认Jinja2变量语法无误
-- 查看AstrBot日志中的详细错误信息
-- 检查系统是否支持HTML渲染功能
+- 检查 Typst 模板语法是否正确（日志含精确行列号）
+- 确认模板开头读取了 `sys.inputs.at("data")`
+- 确认 `typst` Python 包或 CLI 已安装
+- 查看 AstrBot 日志中的详细错误信息
 
 ## 测试检查清单
 
@@ -153,19 +153,19 @@ curl -X POST http://localhost:11451/api/render/image \\
 ### 并发测试
 ```bash
 # 使用ab工具进行并发测试
-ab -n 100 -c 10 -H "Authorization: Bearer test_token_123" \\
-   -H "X-Html-Template: notification" \\
-   -H "X-Target-Type: group" \\
-   -H "X-Target-Id: 123456789" \\
+ab -n 100 -c 10 -H "Authorization: Bearer test_token_123" \
+   -H "X-Template: notification" \
+   -H "X-Target-Type: group" \
+   -H "X-Target-Id: 123456789" \
    http://localhost:11451/api/render/image
 ```
 
 ### 负载测试
 ```bash
 # 使用wrk工具进行负载测试
-wrk -t12 -c400 -d30s \\
-    -H "Authorization: Bearer test_token_123" \\
-    -H "X-Html-Template: notification" \\
+wrk -t12 -c400 -d30s \
+    -H "Authorization: Bearer test_token_123" \
+    -H "X-Template: notification" \
     http://localhost:11451/health
 ```
 

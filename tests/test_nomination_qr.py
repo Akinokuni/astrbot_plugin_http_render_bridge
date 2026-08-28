@@ -28,13 +28,13 @@ def test_nomination_qr_text():
     }
     
     headers = {
-        'X-Html-Template': 'nomination',
+        'X-Template': 'nomination',
         'X-Target-Type': 'group',
         'X-Target-Id': '000000000',
     }
     
     print("🚀 测试nomination模板的默认二维码文案...")
-    print(f"📋 模板: {headers['X-Html-Template']}")
+    print(f"📋 模板: {headers['X-Template']}")
     print(f"🔗 链接: {test_data['link']}")
     print("📝 预期: 二维码下方应显示'扫码参与提名'")
     print("-" * 50)
@@ -87,13 +87,13 @@ def test_custom_qr_text():
     }
     
     headers = {
-        'X-Html-Template': 'nomination',
+        'X-Template': 'nomination',
         'X-Target-Type': 'group',
         'X-Target-Id': '000000000',
     }
     
     print("\n🚀 测试nomination模板的自定义二维码文案...")
-    print(f"📋 模板: {headers['X-Html-Template']}")
+    print(f"📋 模板: {headers['X-Template']}")
     print(f"🔗 链接: {test_data['link']}")
     print(f"📝 自定义文案: {test_data['qr_text']}")
     print("-" * 50)

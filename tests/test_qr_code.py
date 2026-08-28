@@ -28,13 +28,13 @@ def test_qr_code_generation():
     }
     
     headers = {
-        'X-Html-Template': 'nomination',
+        'X-Template': 'nomination',
         'X-Target-Type': 'group',
         'X-Target-Id': '000000000',
     }
     
     print("🚀 测试二维码自动生成功能...")
-    print(f"📋 模板: {headers['X-Html-Template']}")
+    print(f"📋 模板: {headers['X-Template']}")
     print(f"🔗 链接: {test_data['link']}")
     print(f"📝 数据: {json.dumps({k: v for k, v in test_data.items() if k != 'link'}, ensure_ascii=False, indent=2)}")
     print("-" * 50)
@@ -109,7 +109,7 @@ def test_multiple_templates_with_qr():
         print(f"\n🚀 测试 {i}: {test_case['template']} 模板...")
         
         headers = {
-            'X-Html-Template': test_case['template'],
+            'X-Template': test_case['template'],
             'X-Target-Type': 'group',
             'X-Target-Id': '000000000',
         }

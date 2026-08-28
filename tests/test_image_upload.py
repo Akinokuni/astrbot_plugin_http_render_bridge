@@ -32,7 +32,7 @@ def test_image_upload():
     try:
         # 准备请求数据
         headers = {
-            'X-Html-Template': 'notification',
+            'X-Template': 'notification',
             'X-Target-Type': 'group',
             'X-Target-Id': '000000000',
         }
@@ -51,7 +51,7 @@ def test_image_upload():
             }
             
             print("🚀 测试图片上传功能...")
-            print(f"📋 模板: {headers['X-Html-Template']}")
+            print(f"📋 模板: {headers['X-Template']}")
             print(f"🖼️ 图片: {test_image_path}")
             print(f"📝 数据: {data}")
             print("-" * 50)
@@ -106,7 +106,7 @@ def test_multiple_images():
     
     try:
         headers = {
-            'X-Html-Template': 'notification',
+            'X-Template': 'notification',
             'X-Target-Type': 'group',
             'X-Target-Id': '000000000',
         }
@@ -124,7 +124,7 @@ def test_multiple_images():
                 files.append(('image' + str(i), (f'test_image_{i}.png', f.read(), 'image/png')))
         
         print("\n🚀 测试多图片上传功能...")
-        print(f"📋 模板: {headers['X-Html-Template']}")
+        print(f"📋 模板: {headers['X-Template']}")
         print(f"🖼️ 图片数量: {len(test_images)}")
         print("-" * 50)
         
@@ -201,9 +201,9 @@ if __name__ == "__main__":
     
     print("\n" + "="*50)
     print("📝 图片上传功能说明:")
-    print("1. 支持的格式: JPG, PNG, GIF, WebP, BMP")
+    print("1. 支持的格式: JPG, PNG, GIF, WebP")
     print("2. 文件大小限制: 5MB")
-    print("3. 图片会自动转换为base64嵌入模板")
-    print("4. 模板中使用 {{image}} 显示图片")
-    print("5. 可以使用 {{image_filename}} 显示文件名")
+    print("3. 图片会自动转换为hex字符串注入模板")
+    print("4. 模板中使用 hex-to-bytes 解码图片")
+    print("5. 可以使用 image_filename 字段显示文件名")
     print("6. 支持多图片上传（使用不同的字段名）")

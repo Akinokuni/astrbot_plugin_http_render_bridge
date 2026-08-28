@@ -26,7 +26,7 @@ def test_render_only():
     
     # 请求头 - 使用一个无效的目标ID来避免实际发送
     headers = {
-        'X-Html-Template': 'notification',
+        'X-Template': 'notification',
         'X-Target-Type': 'group',
         'X-Target-Id': '000000000',  # 使用无效ID
         'Content-Type': 'multipart/form-data'
@@ -34,7 +34,7 @@ def test_render_only():
     
     print("🚀 开始测试本地渲染功能...")
     print(f"📡 API地址: {base_url}{api_path}")
-    print(f"📋 模板: {headers['X-Html-Template']}")
+    print(f"📋 模板: {headers['X-Template']}")
     print(f"📝 数据: {json.dumps(test_data, ensure_ascii=False, indent=2)}")
     print("-" * 50)
     

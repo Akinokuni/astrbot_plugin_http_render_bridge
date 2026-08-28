@@ -2,14 +2,14 @@
 
 本文档详细描述了 AstrBot HTTP 渲染桥梁插件的所有 API 接口。
 
-## 📋 基本信息
+## 基本信息
 
 - **基础URL**: `http://localhost:11451` (默认)
 - **API路径**: `/api/render/image` (默认)
 - **协议**: HTTP/HTTPS
 - **内容类型**: `multipart/form-data`
 
-## 🔧 通用请求头
+## 通用请求头
 
 ### 必需请求头
 
@@ -26,7 +26,7 @@
 | `X-Html-Template` | string | HTML模板名 | 仅模板模式需要 |
 | `Authorization` | string | Bearer Token认证 | 可选 |
 
-## 🎯 API 端点
+## API 端点
 
 ### 1. 主要消息接口
 
@@ -87,7 +87,7 @@ GET /health
 }
 ```
 
-## 📝 消息类型详细说明
+## 消息类型详细说明
 
 ### HTML模板渲染 (template)
 
@@ -331,7 +331,7 @@ curl -X POST http://localhost:11451/api/render/image \
   -F "at=987654321"
 ```
 
-## 📊 响应格式
+## 响应格式
 
 ### 成功响应
 
@@ -368,7 +368,7 @@ curl -X POST http://localhost:11451/api/render/image \
 | 401 | 认证失败 | Token无效或缺失 |
 | 500 | 服务器内部错误 | 渲染失败、发送失败 |
 
-## 🔐 认证机制
+## 认证机制
 
 ### Bearer Token 认证
 
@@ -382,7 +382,7 @@ Authorization: Bearer YOUR_TOKEN_HERE
 
 如果未配置 `auth_token`，则跳过认证检查。
 
-## 📏 限制和约束
+## 限制和约束
 
 ### 文件大小限制
 
@@ -400,7 +400,7 @@ Authorization: Bearer YOUR_TOKEN_HERE
 
 无特殊限制，但建议合理控制请求频率以避免被QQ限制。
 
-## 🧪 测试工具
+## 测试工具
 
 ### cURL 示例
 
@@ -455,7 +455,7 @@ result = send_message("text", "group", "123456789", {"text": "Hello!"})
 print(result)
 ```
 
-## 🔍 调试技巧
+## 调试技巧
 
 ### 1. 检查插件状态
 
@@ -477,7 +477,7 @@ curl -X GET http://localhost:11451/health
 
 ---
 
-## 📚 相关文档
+## 相关文档
 
 - [消息类型详细指南](MESSAGE_TYPES_GUIDE.md)
 - [HTML模板开发指南](HTML_TEMPLATE_GUIDE.md)

@@ -1,7 +1,15 @@
 # 开发文档和参考项目
 dev/
 http_forwarder/
-需求文档.md
+
+# 模板开发环境 (不上传到GitHub)
+template_dev/
+
+# IDE 工具缓存
+.codeboarding/
+
+# 运行时生成的插件配置
+plugin_config.json
 
 # Python
 __pycache__/

@@ -2,36 +2,36 @@
 
 一个功能强大的 AstrBot 插件，提供 HTTP API 接口，支持 HTML 模板渲染、图片上传、二维码生成和多种 NapCat 消息类型的发送。
 
-## 🎯 功能特性
+## 功能特性
 
 ### 核心功能
-- 🌐 **HTTP API 接口** - 提供标准化的 REST API 接收外部请求
-- 🔐 **Bearer Token 认证** - 安全的 API 访问控制
-- 🎨 **双模式支持** - HTML模板渲染 + 直接消息发送
-- 📱 **动态渲染** - 使用 Jinja2 模板引擎动态填充数据
+- **HTTP API 接口** - 提供标准化的 REST API 接收外部请求
+- **Bearer Token 认证** - 安全的 API 访问控制
+- **双模式支持** - HTML模板渲染 + 直接消息发送
+- **动态渲染** - 使用 Jinja2 模板引擎动态填充数据
 
 ### HTML模板功能
-- 🖼️ **本地图片生成** - 强制使用 AstrBot 本地渲染引擎
-- 💎 **样式完整保留** - 直接渲染 HTML，保留所有 CSS 样式和布局
-- 🔄 **智能后备机制** - HTML 渲染失败时自动降级为 Markdown 渲染
-- 📸 **图片上传支持** - 支持多种格式图片上传和嵌入
-- 🔗 **二维码生成** - 自动生成二维码并嵌入模板
+- **本地图片生成** - 强制使用 AstrBot 本地渲染引擎
+- **样式完整保留** - 直接渲染 HTML，保留所有 CSS 样式和布局
+- **智能后备机制** - HTML 渲染失败时自动降级为 Markdown 渲染
+- **图片上传支持** - 支持多种格式图片上传和嵌入
+- **二维码生成** - 自动生成二维码并嵌入模板
 
 ### NapCat消息类型
-- 📝 **15种消息类型** - 支持文本、图片、语音、视频等
-- 👥 **@用户消息** - 支持@特定用户或@全体成员
-- 🔄 **回复转发** - 支持消息回复和转发功能
-- 😀 **表情互动** - 支持QQ表情、戳一戳、窗口抖动
-- 🎵 **媒体分享** - 支持音乐、链接、位置分享
-- 🎭 **混合消息** - 支持文本+图片+@用户的组合消息
+- **15种消息类型** - 支持文本、图片、语音、视频等
+- **@用户消息** - 支持@特定用户或@全体成员
+- **回复转发** - 支持消息回复和转发功能
+- **表情互动** - 支持QQ表情、戳一戳、窗口抖动
+- **媒体分享** - 支持音乐、链接、位置分享
+- **混合消息** - 支持文本+图片+@用户的组合消息
 
 ### 技术特性
-- 📤 **智能发送** - 支持群聊和私聊消息发送
-- 🔧 **零配置模板** - 文件化模板管理，即放即用
-- 🚀 **高性能处理** - 内存处理，无磁盘IO
-- 📊 **完整监控** - 健康检查和详细日志
+- **智能发送** - 支持群聊和私聊消息发送
+- **零配置模板** - 文件化模板管理，即放即用
+- **高性能处理** - 内存处理，无磁盘IO
+- **完整监控** - 健康检查和详细日志
 
-## 🚀 快速开始
+## 快速开始
 
 ### 1. 安装插件
 
@@ -80,7 +80,7 @@ curl -X POST http://localhost:11451/api/render/image \
   -F "image=@photo.jpg"
 ```
 
-## 📋 支持的消息类型
+## 支持的消息类型
 
 | 类型 | 说明 | 示例用途 |
 |------|------|----------|
@@ -100,7 +100,7 @@ curl -X POST http://localhost:11451/api/render/image \
 | `location` | 位置分享 | 地理位置 |
 | `mixed` | 混合消息 | 复合内容 |
 
-## 🎨 内置模板
+## 内置模板
 
 | 模板名 | 文件 | 用途 |
 |--------|------|------|
@@ -112,7 +112,7 @@ curl -X POST http://localhost:11451/api/render/image \
 | `image_showcase` | image_showcase.html | 图片展示 |
 | `default` | default.html | 默认模板 |
 
-## 📝 API 接口
+## API 接口
 
 ### 主要端点
 
@@ -140,7 +140,7 @@ curl -X POST http://localhost:11451/api/render/image \
 }
 ```
 
-## 🖼️ 图片上传功能
+## 图片上传功能
 
 ### 支持格式
 - JPG, JPEG, PNG, GIF, WebP, BMP
@@ -166,7 +166,7 @@ curl -X POST http://localhost:11451/api/render/image \
   -F "image=@photo.jpg"
 ```
 
-## 🔗 二维码功能
+## 二维码功能
 
 ### 自动生成
 传入 `link` 参数，插件会自动生成二维码并显示在模板右上角：
@@ -182,7 +182,7 @@ curl -X POST http://localhost:11451/api/render/image \
   -F "qr_text=扫码查看项目"
 ```
 
-## 🐍 Python SDK
+## Python SDK
 
 ```python
 import requests
@@ -242,19 +242,19 @@ sender.send_template(
 sender.send_text("Hello, World!", "group", "123456789")
 ```
 
-## 📚 文档
+## 文档
 
 详细文档请查看 [docs](docs/) 目录：
 
-- [📖 文档中心](docs/README.md) - 完整文档索引
-- [🚀 部署指南](docs/DEPLOYMENT.md) - 安装和配置说明
-- [🎨 HTML模板指南](docs/HTML_TEMPLATE_GUIDE.md) - 模板开发指南
-- [📸 图片上传指南](docs/IMAGE_UPLOAD_GUIDE.md) - 图片功能使用说明
-- [📝 消息类型指南](docs/MESSAGE_TYPES_GUIDE.md) - NapCat消息类型详解
-- [🔧 API参考](docs/API_REFERENCE.md) - 完整API文档
-- [🧪 测试指南](docs/TESTING_GUIDE.md) - 测试方法和工具
+- [ 文档中心](docs/README.md) - 完整文档索引
+- [ 部署指南](docs/DEPLOYMENT.md) - 安装和配置说明
+- [ HTML模板指南](docs/HTML_TEMPLATE_GUIDE.md) - 模板开发指南
+- [ 图片上传指南](docs/IMAGE_UPLOAD_GUIDE.md) - 图片功能使用说明
+- [ 消息类型指南](docs/MESSAGE_TYPES_GUIDE.md) - NapCat消息类型详解
+- [ API参考](docs/API_REFERENCE.md) - 完整API文档
+- [ 测试指南](docs/TESTING_GUIDE.md) - 测试方法和工具
 
-## 🔧 配置选项
+## 配置选项
 
 ```json
 {
@@ -272,7 +272,7 @@ sender.send_text("Hello, World!", "group", "123456789")
 | `server_host` | string | `0.0.0.0` | 服务监听地址 |
 | `server_port` | int | `11451` | 服务端口 |
 
-## 🧪 测试工具
+## 测试工具
 
 项目包含多个测试脚本：
 
@@ -287,7 +287,7 @@ python test_message_types.py
 python test_image_upload.py
 ```
 
-## 🔍 故障排除
+## 故障排除
 
 ### 常见问题
 
@@ -311,15 +311,15 @@ python test_image_upload.py
 
 插件日志标识为 `[AstrBot Plugin HTTP Render Bridge]`，包含详细的处理过程信息。
 
-## 🤝 贡献
+## 贡献
 
 欢迎提交Issue和Pull Request来改进这个插件！
 
-## 📄 许可证
+## 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
-## 🔗 相关链接
+## 相关链接
 
 - [AstrBot](https://astrbot.app) - 主项目
 - [NapCat](https://napcat.napneko.icu) - QQ机器人框架
@@ -327,4 +327,4 @@ python test_image_upload.py
 
 ---
 
-**⭐ 如果这个插件对你有帮助，请给个Star支持一下！**
+** 如果这个插件对你有帮助，请给个Star支持一下！**

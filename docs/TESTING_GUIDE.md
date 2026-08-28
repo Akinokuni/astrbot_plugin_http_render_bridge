@@ -1,11 +1,11 @@
 # HTTP渲染桥梁插件 - 测试指南
 
-## 🎯 测试准备
+## 测试准备
 
 ### 1. 确认环境
-- ✅ AstrBot已启动并运行
-- ✅ HTTP渲染桥梁插件已安装并启用
-- ✅ Docker环境正常（如果使用Docker）
+- AstrBot已启动并运行
+- HTTP渲染桥梁插件已安装并启用
+- Docker环境正常（如果使用Docker）
 
 ### 2. 插件配置
 在AstrBot管理面板中配置以下参数：
@@ -19,7 +19,7 @@
 | 默认渲染宽度 | `800` | 像素 |
 | 默认图片质量 | `high` | 高质量 |
 
-## 🧪 测试步骤
+## 测试步骤
 
 ### 第一步：健康检查测试
 
@@ -29,19 +29,19 @@ python test_health.py
 
 **预期结果**：
 ```
-🚀 HTTP渲染桥梁插件 - 健康检查测试
+ HTTP渲染桥梁插件 - 健康检查测试
 ==================================================
-🏥 测试健康检查端点
-🔗 请求地址: http://localhost:11451/health
-📥 响应状态: 200
-✅ 服务健康!
-📊 插件信息:
+ 测试健康检查端点
+ 请求地址: http://localhost:11451/health
+ 响应状态: 200
+ 服务健康!
+ 插件信息:
    - 插件名称: astrbot_plugin_http_render_bridge
    - 版本: 1.0.0
    - 模板数量: 6
    - 时间戳: 2024-01-01T12:00:00
 
-📋 可用模板 (6个):
+ 可用模板 (6个):
    - notification (notification.html): 基于notification.html的模板
    - alert (alert.html): 基于alert.html的模板
    - success (success.html): 基于success.html的模板
@@ -49,7 +49,7 @@ python test_health.py
    - report (report.html): 基于report.html的模板
    - default (default.html): 基于default.html的模板
 
-🎉 健康检查通过! 可以开始API测试
+ 健康检查通过! 可以开始API测试
 ```
 
 ### 第二步：模板渲染测试
@@ -61,11 +61,11 @@ python test_templates.py
 **预期结果**：
 每个模板都应该返回成功响应：
 ```
-🧪 测试模板: notification
-📤 发送数据: {'title': '系统通知', 'content': '这是一条测试通知消息...'}
-📥 响应状态: 200
-📄 响应内容: {"status": "success", "message": "Image sent successfully", "template_used": "notification", "target": "group:123456789"}
-✅ 测试成功!
+ 测试模板: notification
+ 发送数据: {'title': '系统通知', 'content': '这是一条测试通知消息...'}
+ 响应状态: 200
+ 响应内容: {"status": "success", "message": "Image sent successfully", "template_used": "notification", "target": "group:123456789"}
+ 测试成功!
 ```
 
 ### 第三步：手动API测试
@@ -84,12 +84,12 @@ curl -X POST http://localhost:11451/api/render/image \\
   -F "timestamp=$(date)"
 ```
 
-## 🔍 故障排除
+## 故障排除
 
 ### 常见问题
 
 #### 1. 连接失败 (Connection Error)
-**症状**: `❌ 连接失败: 无法连接到服务器`
+**症状**: ` 连接失败: 无法连接到服务器`
 
 **解决方案**:
 - 检查AstrBot是否正常运行
@@ -98,7 +98,7 @@ curl -X POST http://localhost:11451/api/render/image \\
 - 查看AstrBot日志中的错误信息
 
 #### 2. 认证失败 (401 Unauthorized)
-**症状**: `📥 响应状态: 401`
+**症状**: ` 响应状态: 401`
 
 **解决方案**:
 - 检查认证令牌是否正确配置
@@ -122,7 +122,7 @@ curl -X POST http://localhost:11451/api/render/image \\
 - 查看AstrBot日志中的详细错误信息
 - 检查系统是否支持HTML渲染功能
 
-## 📊 测试检查清单
+## 测试检查清单
 
 ### 基础功能测试
 - [ ] 健康检查端点正常响应
@@ -148,7 +148,7 @@ curl -X POST http://localhost:11451/api/render/image \\
 - [ ] 私聊消息发送成功
 - [ ] 图片正确生成和发送
 
-## 🎯 性能测试
+## 性能测试
 
 ### 并发测试
 ```bash
@@ -169,7 +169,7 @@ wrk -t12 -c400 -d30s \\
     http://localhost:11451/health
 ```
 
-## 📝 测试报告模板
+## 测试报告模板
 
 ```
 # HTTP渲染桥梁插件测试报告
@@ -181,10 +181,10 @@ wrk -t12 -c400 -d30s \\
 - 测试人员: [姓名]
 
 ## 测试结果
-### 健康检查: ✅/❌
-### 模板加载: ✅/❌ ([数量]个模板)
-### API功能: ✅/❌
-### 消息发送: ✅/❌
+### 健康检查: /
+### 模板加载: / ([数量]个模板)
+### API功能: /
+### 消息发送: /
 
 ## 发现问题
 1. [问题描述]
@@ -197,7 +197,7 @@ wrk -t12 -c400 -d30s \\
 
 ---
 
-## 🚀 开始测试
+## 开始测试
 
 现在可以按照上述步骤开始测试了！建议按顺序执行：
 
@@ -206,4 +206,4 @@ wrk -t12 -c400 -d30s \\
 3. **手动验证** → 使用curl命令
 4. **功能确认** → 检查QQ群/私聊中的图片消息
 
-祝测试顺利！🎉
+祝测试顺利！

@@ -1,6 +1,6 @@
 # HTTP渲染桥梁插件 - 模板配置详细教程
 
-## 📋 目录
+## 目录
 1. [配置概述](#配置概述)
 2. [内置模板配置](#内置模板配置)
 3. [自定义模板配置](#自定义模板配置)
@@ -77,9 +77,9 @@ HTTP渲染桥梁插件支持两种模板配置方式：
 ```json
 {
   "nomination": {
-    "name": "十二🥥器提名模板",
+    "name": "十二器提名模板",
     "description": "用于展示提名信息的精美模板",
-    "html_content": "<!DOCTYPE html>\\n<html>\\n<head>\\n    <meta charset=\\\"utf-8\\\">\\n    <style>\\n        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');\\n        body {\\n            font-family: \\\"LXGWWenKai-Regular\\\", 'Noto Sans SC', sans-serif;\\n            font-size: 22px;\\n            color: #222;\\n            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);\\n            margin: 0;\\n            min-height: 100vh;\\n            display: flex;\\n            align-items: center;\\n            justify-content: center;\\n        }\\n        .card {\\n            background: #fff;\\n            border-radius: 18px;\\n            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);\\n            padding: 40px 36px 32px 36px;\\n            width: auto;\\n            min-width: 260px;\\n            max-width: 90vw;\\n            display: inline-block;\\n        }\\n        .header {\\n            font-size: 2.2em;\\n            font-weight: bold;\\n            color: #3a7bd5;\\n            margin-bottom: 28px;\\n            text-align: left;\\n            letter-spacing: 2px;\\n            text-shadow: 0 2px 8px #e0eafc;\\n            word-break: break-all;\\n        }\\n        .section {\\n            margin-bottom: 22px;\\n            padding: 18px 0 0 0;\\n            border-radius: 10px;\\n            transition: background 0.3s;\\n            word-break: break-all;\\n        }\\n        .section:hover {\\n            background: #f4f8fb;\\n        }\\n        .label {\\n            font-weight: bold;\\n            color: #4a6fa5;\\n            font-size: 1.05em;\\n            letter-spacing: 1px;\\n        }\\n        .value {\\n            margin-left: 10px;\\n            color: #222;\\n            word-break: break-all;\\n        }\\n        .separator {\\n            border-top: 1.5px dashed #b5c6e0;\\n            margin: 18px 0 0 0;\\n        }\\n        .qr-container {\\n            position: fixed;\\n            right: 24px;\\n            top: 24px;\\n            z-index: 999;\\n            background: #fff;\\n            border-radius: 12px;\\n            box-shadow: 0 4px 16px rgba(31,38,135,0.10);\\n            padding: 10px;\\n        }\\n        .qr-image {\\n            display: block;\\n            width: 120px;\\n            height: 120px;\\n        }\\n        .qr-text {\\n            font-size: 12px;\\n            color: #888;\\n            text-align: center;\\n            margin-top: 4px;\\n        }\\n        @media (max-width: 600px) {\\n            .card {\\n                padding: 18px 6vw 18px 6vw;\\n                min-width: unset;\\n                max-width: 98vw;\\n            }\\n            .header {\\n                font-size: 1.3em;\\n            }\\n        }\\n    </style>\\n</head>\\n<body>\\n    <div class=\\\"card\\\">\\n        <div class=\\\"header\\\">{{header | default('十二🥥器：提名')}}</div>\\n        <div class=\\\"section\\\">\\n            <span class=\\\"label\\\">昵称:</span> <span class=\\\"value\\\"><strong>{{ name | default('未知用户') }}</strong></span>\\n        </div>\\n        <div class=\\\"separator\\\"></div>\\n        <div class=\\\"section\\\">\\n            <span class=\\\"label\\\">提名一:</span> <span class=\\\"value\\\"><strong>{{ title1 | default('暂无') }}</strong></span><br>\\n            <span class=\\\"label\\\">推荐语:</span> <span class=\\\"value\\\">{{ evaluate1 | default('暂无推荐语') }}</span>\\n        </div>\\n        <div class=\\\"separator\\\"></div>\\n        <div class=\\\"section\\\">\\n            <span class=\\\"label\\\">提名二:</span> <span class=\\\"value\\\"><strong>{{ title2 | default('暂无') }}</strong></span><br>\\n            <span class=\\\"label\\\">推荐语:</span> <span class=\\\"value\\\">{{ evaluate2 | default('暂无推荐语') }}</span>\\n        </div>\\n        <div class=\\\"separator\\\"></div>\\n        <div class=\\\"section\\\">\\n            <span class=\\\"label\\\">提名三:</span> <span class=\\\"value\\\"><strong>{{ title3 | default('暂无') }}</strong></span><br>\\n            <span class=\\\"label\\\">推荐语:</span> <span class=\\\"value\\\">{{ evaluate3 | default('暂无推荐语') }}</span>\\n        </div>\\n    </div>\\n    {% if qr_code_base64 %}\\n    <div class=\\\"qr-container\\\">\\n        <img src=\\\"data:image/png;base64,{{ qr_code_base64 }}\\\"\\n             alt=\\\"二维码\\\"\\n             class=\\\"qr-image\\\">\\n        <div class=\\\"qr-text\\\">{{ qr_text | default('扫码参与提名') }}</div>\\n    </div>\\n    {% endif %}\\n</body>\\n</html>",
+    "html_content": "<!DOCTYPE html>\\n<html>\\n<head>\\n    <meta charset=\\\"utf-8\\\">\\n    <style>\\n        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');\\n        body {\\n            font-family: \\\"LXGWWenKai-Regular\\\", 'Noto Sans SC', sans-serif;\\n            font-size: 22px;\\n            color: #222;\\n            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);\\n            margin: 0;\\n            min-height: 100vh;\\n            display: flex;\\n            align-items: center;\\n            justify-content: center;\\n        }\\n        .card {\\n            background: #fff;\\n            border-radius: 18px;\\n            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);\\n            padding: 40px 36px 32px 36px;\\n            width: auto;\\n            min-width: 260px;\\n            max-width: 90vw;\\n            display: inline-block;\\n        }\\n        .header {\\n            font-size: 2.2em;\\n            font-weight: bold;\\n            color: #3a7bd5;\\n            margin-bottom: 28px;\\n            text-align: left;\\n            letter-spacing: 2px;\\n            text-shadow: 0 2px 8px #e0eafc;\\n            word-break: break-all;\\n        }\\n        .section {\\n            margin-bottom: 22px;\\n            padding: 18px 0 0 0;\\n            border-radius: 10px;\\n            transition: background 0.3s;\\n            word-break: break-all;\\n        }\\n        .section:hover {\\n            background: #f4f8fb;\\n        }\\n        .label {\\n            font-weight: bold;\\n            color: #4a6fa5;\\n            font-size: 1.05em;\\n            letter-spacing: 1px;\\n        }\\n        .value {\\n            margin-left: 10px;\\n            color: #222;\\n            word-break: break-all;\\n        }\\n        .separator {\\n            border-top: 1.5px dashed #b5c6e0;\\n            margin: 18px 0 0 0;\\n        }\\n        .qr-container {\\n            position: fixed;\\n            right: 24px;\\n            top: 24px;\\n            z-index: 999;\\n            background: #fff;\\n            border-radius: 12px;\\n            box-shadow: 0 4px 16px rgba(31,38,135,0.10);\\n            padding: 10px;\\n        }\\n        .qr-image {\\n            display: block;\\n            width: 120px;\\n            height: 120px;\\n        }\\n        .qr-text {\\n            font-size: 12px;\\n            color: #888;\\n            text-align: center;\\n            margin-top: 4px;\\n        }\\n        @media (max-width: 600px) {\\n            .card {\\n                padding: 18px 6vw 18px 6vw;\\n                min-width: unset;\\n                max-width: 98vw;\\n            }\\n            .header {\\n                font-size: 1.3em;\\n            }\\n        }\\n    </style>\\n</head>\\n<body>\\n    <div class=\\\"card\\\">\\n        <div class=\\\"header\\\">{{header | default('十二器：提名')}}</div>\\n        <div class=\\\"section\\\">\\n            <span class=\\\"label\\\">昵称:</span> <span class=\\\"value\\\"><strong>{{ name | default('未知用户') }}</strong></span>\\n        </div>\\n        <div class=\\\"separator\\\"></div>\\n        <div class=\\\"section\\\">\\n            <span class=\\\"label\\\">提名一:</span> <span class=\\\"value\\\"><strong>{{ title1 | default('暂无') }}</strong></span><br>\\n            <span class=\\\"label\\\">推荐语:</span> <span class=\\\"value\\\">{{ evaluate1 | default('暂无推荐语') }}</span>\\n        </div>\\n        <div class=\\\"separator\\\"></div>\\n        <div class=\\\"section\\\">\\n            <span class=\\\"label\\\">提名二:</span> <span class=\\\"value\\\"><strong>{{ title2 | default('暂无') }}</strong></span><br>\\n            <span class=\\\"label\\\">推荐语:</span> <span class=\\\"value\\\">{{ evaluate2 | default('暂无推荐语') }}</span>\\n        </div>\\n        <div class=\\\"separator\\\"></div>\\n        <div class=\\\"section\\\">\\n            <span class=\\\"label\\\">提名三:</span> <span class=\\\"value\\\"><strong>{{ title3 | default('暂无') }}</strong></span><br>\\n            <span class=\\\"label\\\">推荐语:</span> <span class=\\\"value\\\">{{ evaluate3 | default('暂无推荐语') }}</span>\\n        </div>\\n    </div>\\n    {% if qr_code_base64 %}\\n    <div class=\\\"qr-container\\\">\\n        <img src=\\\"data:image/png;base64,{{ qr_code_base64 }}\\\"\\n             alt=\\\"二维码\\\"\\n             class=\\\"qr-image\\\">\\n        <div class=\\\"qr-text\\\">{{ qr_text | default('扫码参与提名') }}</div>\\n    </div>\\n    {% endif %}\\n</body>\\n</html>",
     "render_width": 900,
     "render_quality": "high"
   }
@@ -143,7 +143,7 @@ HTTP渲染桥梁插件支持两种模板配置方式：
 | 变量名 | 说明 | 示例值 |
 |--------|------|--------|
 | `name` | 用户昵称 | `"张三"` |
-| `header` | 页面标题 | `"十二🥥器：提名"` |
+| `header` | 页面标题 | `"十二器：提名"` |
 | `title1` | 第一个提名标题 | `"最佳创意奖"` |
 | `evaluate1` | 第一个推荐语 | `"创意十足，令人印象深刻"` |
 | `title2` | 第二个提名标题 | `"最佳团队奖"` |
@@ -265,14 +265,14 @@ print(response.json())
 4. 是否有未闭合的标签
 
 ### Q3: 如何调试模板？
-**A:** 
+**A:**
 1. 先用简单的HTML测试
 2. 逐步添加样式和变量
 3. 查看AstrBot日志中的错误信息
 4. 使用在线HTML验证工具
 
 ### Q4: 图片质量设置有什么区别？
-**A:** 
+**A:**
 - `low`: 文件小，质量一般，适合快速预览
 - `medium`: 平衡质量和文件大小
 - `high`: 高质量，文件较大，推荐使用
@@ -296,7 +296,7 @@ print(response.json())
 
 ---
 
-## 📞 技术支持
+## 技术支持
 
 如果在配置过程中遇到问题，可以：
 1. 查看AstrBot插件日志
@@ -304,4 +304,4 @@ print(response.json())
 3. 验证HTML模板语法
 4. 测试Jinja2变量是否正确
 
-希望这个详细教程能帮助您成功配置和使用HTTP渲染桥梁插件！🎯
+希望这个详细教程能帮助您成功配置和使用HTTP渲染桥梁插件！

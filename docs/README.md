@@ -2,27 +2,27 @@
 
 欢迎来到 AstrBot HTTP 渲染桥梁插件的文档中心！这里包含了插件的完整使用指南和开发文档。
 
-## 📚 文档目录
+## 文档目录
 
-### 🚀 快速开始
+### 快速开始
 
 - [**README.md**](../README.md) - 项目概述和快速开始指南
 - [**部署指南**](DEPLOYMENT.md) - 详细的安装和部署说明
 
-### 🎨 功能指南
+### 功能指南
 
 - [**HTML模板书写指南**](HTML_TEMPLATE_GUIDE.md) - 创建美观HTML模板的完整指南
 - [**图片上传功能指南**](IMAGE_UPLOAD_GUIDE.md) - 图片上传和处理功能使用说明
 - [**NapCat消息类型指南**](MESSAGE_TYPES_GUIDE.md) - 支持的15种消息类型详细说明
 - [**模板配置指南**](TEMPLATE_CONFIG_GUIDE.md) - 模板系统配置和管理
 
-### 🧪 测试和开发
+### 测试和开发
 
 - [**测试指南**](TESTING_GUIDE.md) - 插件测试方法和工具
 - [**API参考**](API_REFERENCE.md) - 完整的API接口文档
 - [**更新日志**](CHANGELOG.md) - 版本更新记录
 
-## 🎯 功能概览
+## 功能概览
 
 ### 核心功能
 
@@ -39,7 +39,7 @@
 - **特殊消息**: 表情、戳一戳、抖动、音乐分享、链接分享、位置分享
 - **混合消息**: 文本+图片+@用户的组合消息
 
-## 🔧 技术架构
+## 技术架构
 
 ```
 HTTP请求 → 插件处理 → 消息构建 → NapCat → QQ
@@ -49,7 +49,7 @@ HTTP请求 → 插件处理 → 消息构建 → NapCat → QQ
 HTML→图片 或 消息数据
 ```
 
-## 📋 使用场景
+## 使用场景
 
 ### 1. 系统通知
 ```bash
@@ -95,7 +95,7 @@ curl -X POST http://localhost:11451/api/render/image \
   -F "title=GitHub项目"
 ```
 
-## 🎨 模板示例
+## 模板示例
 
 ### 通知模板
 - 适用于系统通知、公告发布
@@ -117,13 +117,13 @@ curl -X POST http://localhost:11451/api/render/image \
 - 支持单图和多图布局
 - 响应式设计
 
-## 🔗 相关链接
+## 相关链接
 
 - [GitHub仓库](https://github.com/Akinokuni/astrbot_plugin_http_render_bridge)
 - [AstrBot官网](https://astrbot.app)
 - [NapCat文档](https://napcat.napneko.icu)
 
-## 📞 支持与反馈
+## 支持与反馈
 
 如果您在使用过程中遇到问题或有改进建议，请：
 

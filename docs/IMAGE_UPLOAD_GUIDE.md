@@ -2,20 +2,20 @@
 
 本指南介绍如何在 AstrBot HTTP 渲染桥梁插件中使用图片上传功能。
 
-## 📋 功能概述
+## 功能概述
 
 插件现在支持通过 HTTP 请求上传图片文件，并将其嵌入到 HTML 模板中进行渲染。图片会自动转换为 base64 格式，无需额外的文件存储。
 
-## 🎯 支持的功能
+## 支持的功能
 
-- ✅ **多种图片格式**: JPG, JPEG, PNG, GIF, WebP, BMP
-- ✅ **文件大小限制**: 最大 5MB
-- ✅ **自动转换**: 图片自动转换为 base64 数据URI
-- ✅ **多图片支持**: 一次请求可以上传多张图片
-- ✅ **模板集成**: 图片可以在任何 HTML 模板中显示
-- ✅ **文件信息**: 自动提供文件名和大小信息
+- **多种图片格式**: JPG, JPEG, PNG, GIF, WebP, BMP
+- **文件大小限制**: 最大 5MB
+- **自动转换**: 图片自动转换为 base64 数据URI
+- **多图片支持**: 一次请求可以上传多张图片
+- **模板集成**: 图片可以在任何 HTML 模板中显示
+- **文件信息**: 自动提供文件名和大小信息
 
-## 🚀 使用方法
+## 使用方法
 
 ### 基本用法
 
@@ -68,7 +68,7 @@ files = {
 response = requests.post(url, headers=headers, data=data, files=files)
 ```
 
-## 🎨 模板中使用图片
+## 模板中使用图片
 
 ### 基本图片显示
 
@@ -148,7 +148,7 @@ response = requests.post(url, headers=headers, data=data, files=files)
 }
 ```
 
-## 📝 可用的模板变量
+## 可用的模板变量
 
 当上传图片时，插件会自动提供以下变量：
 
@@ -166,7 +166,7 @@ response = requests.post(url, headers=headers, data=data, files=files)
 - `{{ image1_size }}` - 第二张图片的大小
 - ... 以此类推
 
-## 🔧 技术细节
+## 技术细节
 
 ### 文件处理流程
 
@@ -191,7 +191,7 @@ response = requests.post(url, headers=headers, data=data, files=files)
 - **扩展名检查**: 基于文件扩展名验证
 - **内存处理**: 图片完全在内存中处理，不写入磁盘
 
-## 📋 示例模板
+## 示例模板
 
 ### 通知模板 (notification.html)
 
@@ -243,7 +243,7 @@ response = requests.post(url, headers=headers, data=data, files=files)
 
 专门用于展示多张图片的模板，支持网格布局和单图显示。
 
-## ❓ 常见问题
+## 常见问题
 
 ### Q: 为什么我的图片没有显示？
 
@@ -285,7 +285,7 @@ A: 使用 CSS 控制图片显示：
 }
 ```
 
-## 🚀 高级用法
+## 高级用法
 
 ### 响应式图片
 
@@ -349,7 +349,7 @@ A: 使用 CSS 控制图片显示：
 
 ---
 
-## 📚 相关文档
+## 相关文档
 
 - [HTML模板书写指南](HTML_TEMPLATE_GUIDE.md)
 - [插件配置指南](TEMPLATE_CONFIG_GUIDE.md)

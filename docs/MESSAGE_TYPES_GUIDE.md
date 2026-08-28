@@ -2,14 +2,14 @@
 
 本指南介绍如何使用 AstrBot HTTP 渲染桥梁插件发送各种类型的 NapCat 消息。
 
-## 📋 功能概述
+## 功能概述
 
 插件现在支持两种工作模式：
 
 1. **HTML模板渲染模式**（默认）- 传统的HTML模板渲染功能
 2. **直接消息发送模式** - 直接发送各种NapCat消息类型
 
-## 🎯 使用方法
+## 使用方法
 
 ### 模式选择
 
@@ -30,7 +30,7 @@ Content-Type: multipart/form-data
 text=你好，这是一条测试消息
 ```
 
-## 📝 支持的消息类型
+## 支持的消息类型
 
 ### 1. 纯文本消息 (`text`)
 
@@ -390,7 +390,7 @@ curl -X POST http://localhost:11451/api/render/image \
   -F "content=这是一条HTML模板渲染的消息"
 ```
 
-## 🔧 Python 示例
+## Python 示例
 
 ### 基本用法
 
@@ -526,7 +526,7 @@ sender.send_mixed(
 )
 ```
 
-## 📋 响应格式
+## 响应格式
 
 ### 成功响应
 
@@ -548,7 +548,7 @@ sender.send_mixed(
 }
 ```
 
-## ❓ 常见问题
+## 常见问题
 
 ### Q: 如何保持向后兼容性？
 
@@ -556,7 +556,7 @@ A: 不设置 `X-Message-Type` 头或设置为 `template` 时，插件会使用�
 
 ### Q: 支持哪些文件格式？
 
-A: 
+A:
 - 图片：JPG, PNG, GIF, WebP, BMP
 - 语音：MP3, WAV, AMR等（取决于NapCat支持）
 - 视频：MP4, AVI等（取决于NapCat支持）
@@ -575,7 +575,7 @@ A: 是的，通过 `X-Target-Type` 头指定：
 - `group` - 群聊
 - `private` - 私聊
 
-## 🚀 最佳实践
+## 最佳实践
 
 1. **错误处理**: 始终检查响应状态码和消息
 2. **文件管理**: 及时关闭上传的文件句柄
@@ -585,7 +585,7 @@ A: 是的，通过 `X-Target-Type` 头指定：
 
 ---
 
-## 📚 相关文档
+## 相关文档
 
 - [NapCat消息格式文档](https://napcat.napneko.icu/develop/msg)
 - [HTML模板书写指南](HTML_TEMPLATE_GUIDE.md)

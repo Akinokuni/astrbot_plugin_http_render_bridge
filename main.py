@@ -195,7 +195,18 @@ class HttpRenderBridge(Star):
             logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板目录不存在: {templates_dir}")
 
         # 加载配置中的自定义模板（typ_content 字段）
-        custom_templates = self.config.get('templates', {})
+        # templates 配置为 JSON 字符串（AstrBot WebUI 中为 JSON 编辑器）
+        custom_templates_raw = self.config.get('templates', '{}')
+        if isinstance(custom_templates_raw, str):
+            try:
+                custom_templates = json.loads(custom_templates_raw)
+            except json.JSONDecodeError:
+                logger.error("[AstrBot Plugin HTTP Render Bridge] 自定义模板配置 JSON 解析失败")
+                custom_templates = {}
+        else:
+            # 兼容旧版 object 类型配置
+            custom_templates = custom_templates_raw if isinstance(custom_templates_raw, dict) else {}
+
         if isinstance(custom_templates, dict):
             for alias, tpl in custom_templates.items():
                 if isinstance(tpl, dict) and tpl.get('typ_content'):

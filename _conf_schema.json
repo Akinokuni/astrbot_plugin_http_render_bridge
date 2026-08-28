@@ -25,8 +25,10 @@
         "default": "high"
     },
     "templates": {
-        "description": "自定义模板（JSON对象：别名 -> {name, description, typ_content, render_quality}）",
-        "type": "object",
-        "default": {}
+        "description": "自定义模板（JSON 格式：{\"别名\": {\"name\": \"...\", \"description\": \"...\", \"typ_content\": \"...\", \"render_quality\": \"high\"}}）",
+        "type": "string",
+        "default": "{}",
+        "editor_mode": true,
+        "editor_language": "json"
     }
 }

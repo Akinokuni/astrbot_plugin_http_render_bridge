@@ -207,13 +207,13 @@ Typst 使用原生脚本语法实现逻辑控制，无需额外模板引擎。
 
 常用中文字体：
 
-| 字体 | 风格 | 平台 |
-|------|------|------|
-| Noto Sans SC | 现代黑体 | 需安装 |
-| LXGW WenKai | 手写风格 | 需安装 |
+| 字体              | 风格   | 平台         |
+| --------------- | ---- | ---------- |
+| Noto Sans SC    | 现代黑体 | 需安装        |
+| LXGW WenKai     | 手写风格 | 需安装        |
 | Microsoft YaHei | 微软雅黑 | Windows 自带 |
-| PingFang SC | 苹方 | macOS 自带 |
-| Noto Serif SC | 思源宋体 | 需安装 |
+| PingFang SC     | 苹方   | macOS 自带   |
+| Noto Serif SC   | 思源宋体 | 需安装        |
 
 > 使用 `typst fonts` 命令可查看系统可用字体。
 
@@ -260,11 +260,6 @@ Typst 使用原生脚本语法实现逻辑控制，无需额外模板引擎。
 // 径向渐变
 gradient.radial(rgb("#00b894"), rgb("#00a085"))
 
-// 常用配色方案
-gradient.linear(rgb("#667eea"), rgb("#764ba2"), angle: 135deg)  // 紫蓝
-gradient.linear(rgb("#00b894"), rgb("#00a085"), angle: 135deg)  // 成功绿
-gradient.linear(rgb("#fdcb6e"), rgb("#e17055"), angle: 135deg)  // 警告橙
-gradient.linear(rgb("#74b9ff"), rgb("#0984e3"), angle: 135deg)  // 信息蓝
 ```
 
 ### 圆角卡片与阴影
@@ -355,13 +350,13 @@ Typst 原生支持表格，非常适合数据报告类模板：
 
 ### 注入的图片字段
 
-| 字段 | 说明 |
-|------|------|
-| `image` | 单张图片的 hex 字符串 |
-| `image_filename` | 图片原始文件名 |
-| `image_size` | 图片文件大小（字节） |
-| `image0` / `image1` / ... | 多张图片的 hex 字符串 |
-| `image0_filename` / `image1_filename` / ... | 对应文件名 |
+| 字段                                          | 说明            |
+| ------------------------------------------- | ------------- |
+| `image`                                     | 单张图片的 hex 字符串 |
+| `image_filename`                            | 图片原始文件名       |
+| `image_size`                                | 图片文件大小（字节）    |
+| `image0` / `image1` / ...                   | 多张图片的 hex 字符串 |
+| `image0_filename` / `image1_filename` / ... | 对应文件名         |
 
 ### 显示单张图片
 
@@ -418,11 +413,11 @@ Typst 的 `image()` 直接支持 URL：
 
 传入 `link` 参数后，插件自动生成二维码 PNG，并将其 hex 字符串注入 `data` JSON：
 
-| 字段 | 说明 |
-|------|------|
+| 字段        | 说明             |
+| --------- | -------------- |
 | `qr_code` | 二维码图片的 hex 字符串 |
-| `qr_text` | 二维码说明文字（可选） |
-| `link` | 触发二维码生成的原始链接 |
+| `qr_text` | 二维码说明文字（可选）    |
+| `link`    | 触发二维码生成的原始链接   |
 
 ### 右上角显示二维码
 
@@ -614,20 +609,24 @@ Typst 的 `image()` 直接支持 URL：
 ### Q: 模板报错 `unknown variable: data`？
 
 A: 确保模板第一行是：
+
 ```typst
 #let data = json(bytes(sys.inputs.at("data", default: "{}")))
 ```
+
 `sys.inputs.at("data")` 必须在任何读取操作之前执行。
 
 ### Q: 中文字符渲染异常或换行错误？
 
 A: 检查 `#set text(...)` 是否包含：
+
 1. 一个已安装的中文字体（`typst fonts` 查看可用字体）
 2. `lang: "zh"` 参数
 
 ### Q: 图片为什么不显示？
 
 A: 检查：
+
 1. 模板是否定义了 `hex-to-bytes` 辅助函数
 2. 字段名是否正确（`image` / `image0` / `qr_code`）
 3. 是否使用 `"image" in data` 判断存在性
@@ -636,12 +635,14 @@ A: 检查：
 ### Q: 输出图片的尺寸如何控制？
 
 A: 输出像素 = 页面宽度(pt) / 72 × PPI。
+
 - 版式宽度：模板内 `#set page(width: ...)`
 - 像素密度：插件配置的 PPI / 质量档位（72/144/200/300）
 
 ### Q: 如何调试模板？
 
 A:
+
 1. 本地安装 Typst CLI 后使用 `typst compile` 直接编译
 2. 使用 `typst watch` 实时预览
 3. 检查 AstrBot 日志中的 Typst 错误信息（含精确行列号）
@@ -649,6 +650,7 @@ A:
 ### Q: 模板支持哪些 Typst 功能？
 
 A: 插件将模板作为完整 Typst 文档编译，支持全部 Typst 原生能力：
+
 - 变量、函数、条件、循环
 - 表格、网格、布局（`place`/`grid`/`block`）
 - 渐变、颜色、图片

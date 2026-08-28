@@ -25,9 +25,9 @@
 #block(fill: white, radius: 14pt, stroke: 1pt + rgb("#e5e7eb"), inset: (x: 26pt, y: 24pt))[
   #text(size: 20pt, weight: "bold", fill: rgb("#111827"))[#qq 入群答题]
   #v(16pt)
-  #grid(columns: (150pt, 1fr), column-gutter: 16pt)[
+  #box(width: 150pt, baseline: top)[
     // 左侧：客观题分数面板
-    #block(fill: rgb("#f9fafb"), radius: 10pt, inset: (x: 14pt, y: 14pt))[
+    #block(fill: rgb("#f9fafb"), radius: 10pt, inset: (x: 14pt, y: 14pt), width: 100%)[
       #text(size: 10pt, fill: rgb("#6b7280"))[客观题总分]
       #v(6pt)
       #text(size: 24pt, weight: "bold", fill: rgb("#111827"))[#score]
@@ -44,8 +44,11 @@
       #v(6pt)
       #text(size: 10pt, fill: rgb("#6b7280"))[达标线：#threshold]
     ]
+  ]
+  #h(16pt)
+  #box(width: 1fr, baseline: top)[
     // 右侧：简答题面板
-    #block(inset: (x: 14pt, y: 14pt))[
+    #block(inset: (x: 14pt, y: 14pt), width: 100%)[
       #text(size: 10pt, fill: rgb("#6b7280"))[简答题]
       #v(6pt)
       #text(fill: rgb("#374151"))[#non_qq_subjective_text]

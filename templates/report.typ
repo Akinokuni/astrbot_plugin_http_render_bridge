@@ -10,7 +10,7 @@
 
 #set page(width: 620pt, height: auto, margin: 30pt,
          fill: gradient.linear(rgb("#eef2ff"), rgb("#e0e7ff"), angle: 180deg))
-#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", region: "cn", size: 14pt)
+#set text(font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"), lang: "zh", region: "cn", size: 14pt)
 
 #let metric-card(label, value) = block(
   fill: rgb("#f5f7ff"), radius: 10pt, inset: (x: 16pt, y: 14pt), width: 100%,

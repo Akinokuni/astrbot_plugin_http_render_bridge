@@ -11,6 +11,9 @@ template_dev/
 # 运行时生成的插件配置
 plugin_config.json
 
+# 运行时下载的在线字体缓存
+font_cache/
+
 # Python
 __pycache__/
 *.py[cod]

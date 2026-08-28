@@ -12,7 +12,7 @@
 
 #set page(width: 580pt, height: auto, margin: 28pt,
          fill: gradient.linear(rgb("#f0fff4"), rgb("#c6f6d5"), angle: 135deg))
-#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", region: "cn", size: 14pt)
+#set text(font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"), lang: "zh", region: "cn", size: 14pt)
 
 #block(fill: white, radius: 15pt, inset: (x: 30pt, y: 28pt))[
   #align(center)[

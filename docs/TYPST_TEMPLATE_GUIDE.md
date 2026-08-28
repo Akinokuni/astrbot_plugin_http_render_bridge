@@ -196,24 +196,43 @@ Typst 使用原生脚本语法实现逻辑控制，无需额外模板引擎。
 ```typst
 // 设置默认字体（含中文回退链）
 #set text(
-  font: ("Noto Sans SC", "LXGW WenKai", "Microsoft YaHei"),
+  font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"),
   lang: "zh",            // 中文断行必需
   region: "cn",          // 区域变体（可选）
   size: 14pt,            // 默认字号
 )
 ```
 
-字体按列表顺序回退：列表中的第一个已安装字体会被使用。
+字体按列表顺序回退：列表中的第一个可用字体会被使用。
+
+**捆绑字体**：插件在 `fonts/` 目录下捆绑了轻量中文字体，随插件分发，即使服务器没有安装任何中文字体也能正常渲染中文：
+
+| 字体文件 | Typst 字体族名 | 风格 | 许可证 |
+|----------|---------------|------|--------|
+| `NotoSansSC-Regular.ttf` | Noto Sans SC | 现代黑体 | SIL Open Font License |
+| `LXGWWenKaiLite-Regular.ttf` | LXGW WenKai Lite | 手写楷体 | SIL Open Font License |
+
+捆绑字体目录通过 `TYPST_FONT_PATHS` 环境变量挂载（typst CLI 自动读取），同时官方 Python 绑定在编译时通过 `font_paths` 参数显式传入同一目录，两条渲染路径均无需系统字体即可命中捆绑字体。
+
+**在线字体扩展**：模板可在内部以 `// @font-url` 注释声明在线字体 URL（每行一个），插件渲染时提取声明并异步下载至本地 `font_cache/` 缓存目录，即时挂载到字体扫描路径，Typst 按字体族名匹配使用。同一 URL 的字体只下载一次，后续渲染直接命中缓存离线编译。HTTP 请求不携带任何字体参数：
+
+```typst
+// @font-url https://example.com/fonts/ZCOOLQingKeHuangYou-Regular.ttf
+#set text(font: ("ZCOOL QingKe HuangYou", "Noto Sans SC"), lang: "zh", size: 14pt)
+```
+
+支持 TTF、OTF、TTC、WOFF、WOFF2 格式。
 
 常用中文字体：
 
-| 字体              | 风格   | 平台         |
-| --------------- | ---- | ---------- |
-| Noto Sans SC    | 现代黑体 | 需安装        |
-| LXGW WenKai     | 手写风格 | 需安装        |
+| 字体 | 风格 | 平台 |
+|------|------|------|
+| Noto Sans SC | 现代黑体 | 插件捆绑（fonts/） |
+| LXGW WenKai Lite | 手写楷体 | 插件捆绑（fonts/） |
+| Noto Sans CJK SC | 思源黑体 | Linux 需安装 `fonts-noto-cjk` |
 | Microsoft YaHei | 微软雅黑 | Windows 自带 |
-| PingFang SC     | 苹方   | macOS 自带   |
-| Noto Serif SC   | 思源宋体 | 需安装        |
+| PingFang SC | 苹方 | macOS 自带 |
+| SimHei | 黑体 | Windows 自带 |
 
 > 使用 `typst fonts` 命令可查看系统可用字体。
 
@@ -509,9 +528,8 @@ Typst 的 `image()` 直接支持 URL：
 
 #set page(width: 680pt, height: auto, margin: 24pt,
          fill: gradient.linear(rgb("#667eea"), rgb("#764ba2"), angle: 135deg))
-#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", size: 14pt)
+#set text(font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"), lang: "zh", size: 14pt)
 
-// 阴影卡片
 #block(fill: rgb("#000").transparentize(80%), radius: 18pt, inset: 0pt)[
   #pad(top: 6pt, left: 6pt)[
     #block(fill: white, radius: 16pt, inset: (x: 28pt, y: 24pt))[
@@ -540,7 +558,7 @@ Typst 的 `image()` 直接支持 URL：
 
 #set page(width: 700pt, height: auto, margin: 24pt,
          fill: gradient.linear(rgb("#74b9ff"), rgb("#0984e3"), angle: 135deg))
-#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", size: 14pt)
+#set text(font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"), lang: "zh", size: 14pt)
 
 #block(fill: white, radius: 16pt, inset: (x: 32pt, y: 28pt))[
   #align(center)[
@@ -574,7 +592,7 @@ Typst 的 `image()` 直接支持 URL：
 
 #set page(width: 640pt, height: auto, margin: 24pt,
          fill: gradient.linear(rgb("#e0eafc"), rgb("#cfdef3"), angle: 135deg))
-#set text(font: ("Noto Sans SC", "LXGW WenKai", "Microsoft YaHei"),
+#set text(font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"),
           lang: "zh", size: 16pt)
 
 // 右上角二维码

@@ -1,4 +1,4 @@
-"""临时脚本：验证 templates/ 下所有 .typ 模板能否编译（含图片注入路径）"""
+"""验证 templates/ 下所有 .typ 模板能否编译（含图片注入路径和捆绑字体）"""
 import base64
 import json
 import os
@@ -7,6 +7,10 @@ import sys
 import typst
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'templates')
+FONTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'fonts')
+
+# 字体路径：确保捆绑字体目录存在且可读时才传入
+FONT_PATHS = [FONTS_DIR] if (os.path.isdir(FONTS_DIR) and os.access(FONTS_DIR, os.R_OK)) else None
 
 # 1x1 像素 PNG 的 hex 字符串，用于验证 image() 图片注入路径
 TINY_PNG_HEX = base64.b64decode(
@@ -56,11 +60,16 @@ for filename in sorted(os.listdir(TEMPLATES_DIR)):
     with open(path, 'r', encoding='utf-8') as f:
         source = f.read()
     try:
+        compile_kwargs = {
+            'format': 'png',
+            'ppi': 72,
+            'sys_inputs': {'data': json.dumps(sample_data, ensure_ascii=False)},
+        }
+        if FONT_PATHS:
+            compile_kwargs['font_paths'] = FONT_PATHS
         png = typst.compile(
             source.encode('utf-8'),
-            format='png',
-            ppi=72,
-            sys_inputs={'data': json.dumps(sample_data, ensure_ascii=False)},
+            **compile_kwargs,
         )
         size = len(bytes(png)) if png else 0
         print(f"OK   {filename}: {size} bytes")

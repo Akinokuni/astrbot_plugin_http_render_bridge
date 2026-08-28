@@ -8,6 +8,7 @@
 - Typst 渲染引擎（二选一，推荐安装 Python 绑定）：
   - 官方 `typst` Python 绑定（`pip install typst`），内存编译，主渲染路径
   - 系统安装 `typst` CLI，作为后备渲染路径
+- 中文字体：无需安装。插件捆绑 Noto Sans SC 与 LXGW WenKai Lite 中文字体（`fonts/` 目录），通过 `TYPST_FONT_PATHS` 环境变量挂载，无系统字体环境也能正常渲染中文
 
 ## 安装步骤
 
@@ -170,6 +171,33 @@ python test_api.py
 - `render_quality`: 图片质量 (`ultra`/`high`/`medium`/`low`，映射 300/200/144/72 PPI)
 
 > 模板文件也可以直接以 `.typ` 文件形式放在插件的 `templates/` 目录下，文件名即模板别名。
+
+### 字体配置
+
+#### 内置中文字体
+
+插件捆绑以下轻量中文字体（`fonts/` 目录），随插件分发：
+
+| 字体文件 | Typst 字体族名 | 风格 |
+|----------|---------------|------|
+| `NotoSansSC-Regular.ttf` | Noto Sans SC | 现代黑体 |
+| `LXGWWenKaiLite-Regular.ttf` | LXGW WenKai Lite | 手写楷体 |
+
+插件初始化时将 `fonts/` 目录挂载到 `TYPST_FONT_PATHS` 环境变量（typst CLI 自动读取该变量扫描字体），官方 Python 绑定在编译时通过 `font_paths` 参数显式传入同一目录。环境中已存在的 `TYPST_FONT_PATHS` 值被保留并拼接在后。两条渲染路径均无需系统字体即可命中捆绑字体。
+
+#### 在线字体缓存
+
+```json
+{
+    "font_cache_dir": "font_cache",
+    "font_download_timeout": 30
+}
+```
+
+- `font_cache_dir`: 在线字体缓存目录。相对路径基于插件目录解析，绝对路径按原样使用。模板声明的字体下载后存放于此。
+- `font_download_timeout`: 单个字体下载超时（秒）。
+
+在线字体 URL 在模板内部以 `// @font-url` 注释声明（每行一个 URL），HTTP 请求不携带字体参数。插件渲染时提取声明，异步下载至缓存目录并即时挂载到字体扫描路径。缓存文件名取 URL 的 SHA-256 摘要，同一 URL 只下载一次，后续渲染直接命中缓存离线编译。
 
 ## 防火墙配置
 

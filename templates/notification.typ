@@ -14,7 +14,7 @@
 
 #set page(width: 600pt, height: auto, margin: 28pt,
          fill: gradient.linear(rgb("#667eea"), rgb("#764ba2"), angle: 135deg))
-#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", region: "cn", size: 14pt)
+#set text(font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"), lang: "zh", region: "cn", size: 14pt)
 
 #block(fill: white, radius: 15pt, inset: (x: 28pt, y: 26pt))[
   #align(center)[#text(size: 22pt, weight: "bold", fill: rgb("#333333"))[#title]]

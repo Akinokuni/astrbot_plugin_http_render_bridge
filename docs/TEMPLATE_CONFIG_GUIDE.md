@@ -201,13 +201,13 @@ templates/
 
 ```typst
 #set text(
-  font: ("Noto Sans SC", "LXGW WenKai", "Microsoft YaHei"),
+  font: ("Noto Sans SC", "LXGW WenKai Lite", "Microsoft YaHei"),
   lang: "zh",
   size: 16pt,
 )
 ```
 
-字体按顺序回退，`typst fonts` 可查看系统可用字体。支持系统字体，也可通过 Typst 包机制引入字体包。
+字体按顺序回退，`typst fonts` 可查看系统可用字体。插件捆绑 `Noto Sans SC`（黑体）与 `LXGW WenKai Lite`（楷体）两个中文字体，通过 `TYPST_FONT_PATHS` 挂载，无系统字体环境也能命中。模板还可在内部以 `// @font-url` 注释声明在线字体 URL，插件下载至本地缓存并即时挂载到字体扫描路径，详见 [Typst模板书写指南](TYPST_TEMPLATE_GUIDE.md) 的字体章节。
 
 ### 5. 长文本处理
 

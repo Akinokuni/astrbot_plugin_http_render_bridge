@@ -14,6 +14,8 @@
 - **本地图片生成** - 使用 Typst 编译为 PNG 图片
 - **双渲染路径** - 优先官方 `typst` Python 绑定内存编译，自动回退 `typst` CLI
 - **排版级样式** - 支持 Typst 完整排版能力（字体、颜色、表格、渐变）
+- **内置中文字体** - 捆绑 Noto Sans SC 与 LXGW WenKai Lite，通过 `TYPST_FONT_PATHS` 挂载，无系统字体也能渲染中文
+- **在线字体扩展** - 模板内 `// @font-url` 声明字体 URL，异步下载至本地 `font_cache/` 缓存并即时挂载到字体扫描路径供 Typst 匹配
 - **图片上传支持** - 支持多种格式图片上传并嵌入模板
 - **二维码生成** - 自动生成二维码并嵌入模板
 
@@ -183,6 +185,39 @@ curl -X POST http://localhost:11451/api/render/image \
   -F "qr_text=扫码查看项目"
 ```
 
+## 字体支持
+
+### 内置中文字体
+
+插件捆绑轻量中文字体，随插件分发，无系统字体环境也能正常渲染中文：
+
+| 字体文件 | Typst 字体族名 | 风格 |
+|----------|---------------|------|
+| `fonts/NotoSansSC-Regular.ttf` | Noto Sans SC | 现代黑体 |
+| `fonts/LXGWWenKaiLite-Regular.ttf` | LXGW WenKai Lite | 手写楷体 |
+
+捆绑字体目录通过 `TYPST_FONT_PATHS` 环境变量挂载（typst CLI 自动读取），Python 绑定渲染路径在编译时显式传入同一目录。模板中按字体族名引用即可命中：
+
+```typst
+#set text(font: ("LXGW WenKai Lite", "Noto Sans SC"), lang: "zh", size: 14pt)
+```
+
+### 在线字体扩展
+
+在线字体 URL 在**模板内部**以 `// @font-url` 注释声明（每行一个 URL），HTTP 请求无需携带任何字体参数。插件渲染模板时提取这些声明，异步下载字体至本地 `font_cache/` 缓存目录并即时挂载到字体扫描路径，Typst 按字体族名匹配使用。同一 URL 的字体只下载一次，后续渲染直接命中缓存，离线环境同样可用：
+
+```typst
+// 模板内声明在线字体（注释形式，不影响 Typst 编译）
+// @font-url https://example.com/fonts/ZCOOLQingKeHuangYou-Regular.ttf
+
+#let data = json.decode(sys.inputs.at("data", default: "{}"))
+
+#set page(width: 600pt, height: auto, margin: 28pt)
+#set text(font: ("ZCOOL QingKe HuangYou", "Noto Sans SC"), lang: "zh", size: 14pt)
+```
+
+支持格式：TTF、OTF、TTC、WOFF、WOFF2。缓存文件名为 URL 的 SHA-256 摘要 + 原扩展名，下载内容经字体魔数校验，无效内容不写入缓存。缓存目录通过 `font_cache_dir` 配置项调整，下载超时通过 `font_download_timeout` 配置项调整。健康检查端点的 `fonts` 字段可查看已捆绑和已缓存的字体列表。
+
 ## Python SDK
 
 ```python
@@ -262,7 +297,10 @@ sender.send_text("Hello, World!", "group", "123456789")
   "api_path": "/api/render/image",
   "auth_token": "your_secure_token_here",
   "server_host": "0.0.0.0",
-  "server_port": 11451
+  "server_port": 11451,
+  "render_quality": "high",
+  "font_cache_dir": "font_cache",
+  "font_download_timeout": 30
 }
 ```
 
@@ -272,6 +310,9 @@ sender.send_text("Hello, World!", "group", "123456789")
 | `auth_token` | string | `""` | Bearer Token认证 |
 | `server_host` | string | `0.0.0.0` | 服务监听地址 |
 | `server_port` | int | `11451` | 服务端口 |
+| `render_quality` | string | `high` | 默认渲染质量（low/medium/high/ultra，映射 72/144/200/300 PPI） |
+| `font_cache_dir` | string | `font_cache` | 在线字体缓存目录（相对路径基于插件目录解析） |
+| `font_download_timeout` | int | `30` | 单个在线字体下载超时（秒） |
 
 ## 测试工具
 

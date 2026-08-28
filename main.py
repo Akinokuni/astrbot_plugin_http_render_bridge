@@ -1,10 +1,12 @@
 import asyncio
 import base64
+import hashlib
 import json
 import os
+import re
 from datetime import datetime
-from typing import Optional, Dict, Any
-from urllib.parse import quote
+from typing import Optional, Dict, Any, List
+from urllib.parse import quote, urlparse
 
 import aiohttp
 from aiohttp import web, MultipartReader
@@ -31,36 +33,152 @@ QUALITY_PPI_MAP = {
 }
 DEFAULT_QUALITY = 'high'
 
+# 插件目录下捆绑的字体目录（fonts/），随插件分发，确保环境无系统字体时中文正常渲染
+_PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
+FONTS_DIR = os.path.join(_PLUGIN_DIR, 'fonts')
 
-def _compile_typst_with_binding(source: str, ppi: int, data_json: str) -> bytes:
+# 字体缓存目录默认名称（相对插件目录），外部传入的字体 URL 下载后存放于此
+DEFAULT_FONT_CACHE_DIR_NAME = 'font_cache'
+
+# 插件支持的字体文件扩展名（typst 可识别的格式）
+FONT_EXTENSIONS = ('.ttf', '.otf', '.ttc', '.woff', '.woff2')
+
+# 字体文件魔数：用于校验下载内容确为字体文件，防止把 HTML 错误页写入缓存
+_FONT_MAGICS = (
+    b'\x00\x01\x00\x00',  # TrueType (ttf)
+    b'OTTO',              # OpenType CFF (otf)
+    b'true',              # TrueType (Apple tag)
+    b'ttcf',              # TrueType Collection (ttc)
+    b'wOFF',              # Web Open Font Format (woff)
+    b'wOF2',              # Web Open Font Format 2 (woff2)
+)
+
+
+# 模板内在线字体声明语法：注释形式的 @font-url 指令，每行一个字体 URL
+# 示例：// @font-url https://example.com/fonts/ZCOOLQingKeHuangYou-Regular.ttf
+FONT_URL_PATTERN = re.compile(r'@font-url\s+(\S+)')
+
+
+def _extract_font_urls_from_template(source: str) -> List[str]:
+    """从模板源码中提取 @font-url 注释声明的在线字体 URL"""
+    return FONT_URL_PATTERN.findall(source or '')
+
+
+def _is_font_file(data: bytes) -> bool:
+    """校验字节内容是否为字体文件（按文件头魔数判断）"""
+    return len(data) >= 4 and data[:4] in _FONT_MAGICS
+
+
+def _list_font_files(directory: str) -> List[str]:
+    """列出目录下的字体文件名（健康检查端点展示用，目录不可读时返回空列表）"""
+    try:
+        return sorted(
+            name for name in os.listdir(directory)
+            if os.path.splitext(name)[1].lower() in FONT_EXTENSIONS
+        )
+    except OSError:
+        return []
+
+
+async def fetch_font_urls_to_cache(font_urls: List[str], cache_dir: str, timeout: int = 30) -> List[str]:
+    """异步下载模板 @font-url 声明的字体 URL 到本地字体缓存目录
+
+    缓存文件名取 URL 的 SHA-256 摘要（前 16 位）+ 原扩展名：
+    同一 URL 重复请求时直接命中本地缓存，无网络开销，离线环境同样可用。
+    下载内容经字体魔数校验，无效内容（如错误页）不写入缓存。
+
+    :param font_urls: 字体文件 URL 列表
+    :param cache_dir: 字体缓存目录
+    :param timeout: 单个字体下载超时（秒）
+    :return: 本次请求涉及的缓存字体文件路径列表（缓存命中或新下载）
+    """
+    if not font_urls:
+        return []
+
+    try:
+        os.makedirs(cache_dir, exist_ok=True)
+    except OSError as e:
+        logger.error(f"[AstrBot Plugin HTTP Render Bridge] 创建字体缓存目录失败 {cache_dir}: {e}")
+        return []
+
+    font_files: List[str] = []
+    async with aiohttp.ClientSession() as session:
+        for url in dict.fromkeys(font_urls):
+            digest = hashlib.sha256(url.encode('utf-8')).hexdigest()[:16]
+            ext = os.path.splitext(urlparse(url).path)[1].lower()
+            if ext not in FONT_EXTENSIONS:
+                ext = '.ttf'
+            target_path = os.path.join(cache_dir, f"{digest}{ext}")
+
+            if os.path.isfile(target_path):
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 字体缓存命中: {url}")
+                font_files.append(target_path)
+                continue
+
+            try:
+                async with session.get(url, timeout=timeout) as response:
+                    response.raise_for_status()
+                    data = await response.read()
+                if not _is_font_file(data):
+                    logger.error(f"[AstrBot Plugin HTTP Render Bridge] 下载内容不是字体文件，已忽略: {url}")
+                    continue
+                with open(target_path, 'wb') as f:
+                    f.write(data)
+                logger.info(f"[AstrBot Plugin HTTP Render Bridge] 字体下载完成并缓存: {url} -> {target_path} ({len(data)} bytes)")
+                font_files.append(target_path)
+            except asyncio.TimeoutError:
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 下载字体超时: {url}")
+            except aiohttp.ClientError as e:
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 下载字体网络错误 {url}: {e}")
+            except OSError as e:
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 保存字体文件失败 {url}: {e}")
+            except Exception as e:
+                logger.error(f"[AstrBot Plugin HTTP Render Bridge] 下载字体时发生意外错误 {url}: {e}")
+
+    return font_files
+
+
+def _compile_typst_with_binding(source: str, ppi: int, data_json: str, font_paths: list = None) -> bytes:
     """使用官方 typst Python 绑定在内存中编译模板为 PNG（主渲染路径）
 
     :param source: Typst 模板源码
     :param ppi: 输出图片的 PPI
     :param data_json: 注入模板的数据（sys.inputs 的 data 参数）
+    :param font_paths: 额外字体搜索路径列表
     :return: PNG 图片字节
     """
+    compile_kwargs = {
+        'format': 'png',
+        'ppi': ppi,
+        'sys_inputs': {'data': data_json},
+    }
+    if font_paths:
+        compile_kwargs['font_paths'] = font_paths
     png_bytes = typst.compile(
         source.encode('utf-8'),
-        format='png',
-        ppi=ppi,
-        sys_inputs={'data': data_json},
+        **compile_kwargs,
     )
     return bytes(png_bytes)
 
 
-async def _compile_typst_with_cli(source: str, ppi: int, data_json: str) -> bytes:
+async def _compile_typst_with_cli(source: str, ppi: int, data_json: str, font_paths: list = None) -> bytes:
     """使用 typst CLI 子进程编译模板为 PNG（后备渲染路径）
 
     模板源码通过 stdin（输入 `-`）传递，PNG 从 stdout（输出 `-`）读取，
     不落盘临时文件。data 参数通过 --input 直接传入 argv，不经过 shell。
     """
-    proc = await asyncio.create_subprocess_exec(
+    cli_args = [
         'typst', 'compile',
         '--format', 'png',
         '--ppi', str(ppi),
         '--input', f'data={data_json}',
-        '-', '-',
+    ]
+    if font_paths:
+        for fp in font_paths:
+            cli_args.extend(['--font-path', fp])
+    cli_args.extend(['-', '-'])
+    proc = await asyncio.create_subprocess_exec(
+        *cli_args,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
@@ -145,6 +263,21 @@ class HttpRenderBridge(Star):
         
         logger.info("[AstrBot Plugin HTTP Render Bridge] 插件初始化开始")
         
+        # 字体缓存目录：外部传入的字体 URL 下载后存放于此
+        # 相对路径基于插件目录解析，绝对路径按原样使用
+        font_cache_cfg = self.config.get('font_cache_dir', DEFAULT_FONT_CACHE_DIR_NAME)
+        self.font_cache_dir = (
+            font_cache_cfg if os.path.isabs(font_cache_cfg)
+            else os.path.join(_PLUGIN_DIR, font_cache_cfg)
+        )
+        try:
+            os.makedirs(self.font_cache_dir, exist_ok=True)
+        except OSError as e:
+            logger.warning(f"[AstrBot Plugin HTTP Render Bridge] 创建字体缓存目录失败 {self.font_cache_dir}: {e}")
+        
+        # 挂载字体目录到 TYPST_FONT_PATHS 环境变量（typst CLI 读取该变量）
+        self._mount_font_paths_env()
+        
         # 初始化默认模板
         self._init_default_templates()
         
@@ -152,6 +285,22 @@ class HttpRenderBridge(Star):
         asyncio.create_task(self.start_server())
         
         logger.info("[AstrBot Plugin HTTP Render Bridge] 插件初始化完成")
+
+    def _mount_font_paths_env(self):
+        """将捆绑字体目录与字体缓存目录挂载到 TYPST_FONT_PATHS 环境变量
+
+        typst CLI 自动读取 TYPST_FONT_PATHS 扫描目录内字体；官方 Python
+        绑定则在编译时通过 font_paths 参数显式传入同一组目录。已有环境
+        变量值被保留并拼接在新目录之后。
+        """
+        font_dirs = [FONTS_DIR, self.font_cache_dir]
+        existing = os.environ.get('TYPST_FONT_PATHS', '')
+        for part in existing.split(os.pathsep):
+            part = part.strip()
+            if part and part not in font_dirs:
+                font_dirs.append(part)
+        os.environ['TYPST_FONT_PATHS'] = os.pathsep.join(font_dirs)
+        logger.info(f"[AstrBot Plugin HTTP Render Bridge] TYPST_FONT_PATHS: {os.environ['TYPST_FONT_PATHS']}")
 
     def _init_default_templates(self):
         """初始化默认模板"""
@@ -269,6 +418,11 @@ class HttpRenderBridge(Star):
             'render_engine': 'Typst',
             'templates_count': len(self.templates_cache),
             'available_templates': available_templates,
+            'fonts': {
+                'bundled': _list_font_files(FONTS_DIR),
+                'cached': _list_font_files(self.font_cache_dir),
+                'cache_dir': self.font_cache_dir,
+            },
             'timestamp': datetime.now().isoformat()
         })
 
@@ -502,6 +656,14 @@ class HttpRenderBridge(Star):
                 'message': 'Failed to parse form data'
             }, status=400)
 
+    async def _ensure_fonts_cached(self, font_urls: List[str]) -> List[str]:
+        """下载模板内声明的字体 URL 到本地缓存，返回需要挂载的字体扫描目录列表"""
+        if not font_urls:
+            return []
+        timeout = self.config.get('font_download_timeout', 30)
+        cached = await fetch_font_urls_to_cache(font_urls, self.font_cache_dir, timeout=timeout)
+        return [self.font_cache_dir] if cached else []
+
     async def _render_template_to_image(self, template_alias: str, data: Dict[str, Any]) -> Optional[bytes]:
         """渲染Typst模板为PNG图片字节
 
@@ -513,6 +675,12 @@ class HttpRenderBridge(Star):
             if not template_info:
                 logger.error(f"[AstrBot Plugin HTTP Render Bridge] 模板 {template_alias} 不存在")
                 return None
+
+            source = template_info['typ_content']
+
+            # 模板内 @font-url 注释声明的在线字体：下载至本地缓存并即时挂载到字体扫描路径
+            font_urls = _extract_font_urls_from_template(source)
+            extra_font_paths = await self._ensure_fonts_cached(font_urls)
 
             # 处理二维码生成
             render_data = data.copy()
@@ -532,23 +700,28 @@ class HttpRenderBridge(Star):
             # 请求体数据聚合为 JSON 字符串（sys.inputs 的 data 单一入口）
             data_json = json.dumps(render_data, ensure_ascii=False)
 
-            source = template_info['typ_content']
             quality = template_info.get('render_quality', DEFAULT_QUALITY)
             ppi = QUALITY_PPI_MAP.get(quality, QUALITY_PPI_MAP[DEFAULT_QUALITY])
+
+            # 字体路径：捆绑字体目录 + 模板 @font-url 声明的字体缓存目录
+            # 仅保留存在且可读的目录，避免向渲染引擎传入无效路径
+            font_dirs = [FONTS_DIR] + list(extra_font_paths or [])
+            font_dirs = [d for d in font_dirs if os.path.isdir(d) and os.access(d, os.R_OK)]
+            font_paths = font_dirs if font_dirs else None
 
             # 主渲染路径：官方 typst Python 绑定（内存编译）
             if TYPST_BINDING_AVAILABLE:
                 try:
                     logger.info(f"[AstrBot Plugin HTTP Render Bridge] 使用 typst Python 绑定渲染（{quality}, {ppi} PPI）")
                     loop = asyncio.get_event_loop()
-                    return await loop.run_in_executor(None, _compile_typst_with_binding, source, ppi, data_json)
+                    return await loop.run_in_executor(None, _compile_typst_with_binding, source, ppi, data_json, font_paths)
                 except Exception as binding_error:
                     logger.warning(f"[AstrBot Plugin HTTP Render Bridge] typst Python 绑定渲染失败，回退 CLI: {binding_error}")
 
             # 后备渲染路径：typst CLI 子进程
             try:
                 logger.info(f"[AstrBot Plugin HTTP Render Bridge] 使用 typst CLI 渲染（{quality}, {ppi} PPI）")
-                return await _compile_typst_with_cli(source, ppi, data_json)
+                return await _compile_typst_with_cli(source, ppi, data_json, font_paths)
             except FileNotFoundError:
                 logger.error("[AstrBot Plugin HTTP Render Bridge] typst CLI 不可用且 Python 绑定未安装，模板渲染模式不可用")
                 return None

@@ -4,5 +4,7 @@
   "server_host": "0.0.0.0",
   "server_port": 11451,
   "render_quality": "high",
+  "font_cache_dir": "font_cache",
+  "font_download_timeout": 30,
   "templates": "{}"
 }

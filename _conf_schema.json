@@ -24,6 +24,16 @@
         "type": "string",
         "default": "high"
     },
+    "font_cache_dir": {
+        "description": "在线字体缓存目录（相对路径基于插件目录解析，绝对路径按原样使用）",
+        "type": "string",
+        "default": "font_cache"
+    },
+    "font_download_timeout": {
+        "description": "单个在线字体下载超时（秒）",
+        "type": "int",
+        "default": 30
+    },
     "templates": {
         "description": "自定义模板（JSON 格式：{\"别名\": {\"name\": \"...\", \"description\": \"...\", \"typ_content\": \"...\", \"render_quality\": \"high\"}}）",
         "type": "string",

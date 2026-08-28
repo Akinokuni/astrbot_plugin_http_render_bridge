@@ -16,7 +16,7 @@
 #let hex-to-bytes(s) = bytes(range(0, calc.floor(s.len() / 2)).map(i => int(s.slice(i * 2, i * 2 + 2), base: 16)))
 
 #set page(width: 640pt, height: auto, margin: 30pt, fill: rgb("#f4f6f8"))
-#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", region: "cn", size: 15pt)
+#set text(font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"), lang: "zh", region: "cn", size: 15pt)
 
 #let nomination-item(label, title, evaluate) = [
   #v(14pt)

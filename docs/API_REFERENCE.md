@@ -83,6 +83,11 @@ GET /health
             "description": "基于notification.typ的模板"
         }
     ],
+    "fonts": {
+        "bundled": ["NotoSansSC-Regular.ttf", "LXGWWenKaiLite-Regular.ttf"],
+        "cached": ["503fa67c04ea533b.ttf"],
+        "cache_dir": "/path/to/plugin/font_cache"
+    },
     "timestamp": "2024-10-30T18:00:00.000Z"
 }
 ```
@@ -98,6 +103,8 @@ X-Template: notification
 ```
 
 **参数:** 根据模板需要。插件将所有表单字段聚合为 JSON 字符串，通过 `data` 单一入口注入模板（详见 [Typst模板书写指南](TYPST_TEMPLATE_GUIDE.md)）。
+
+在线字体在**模板内部**以 `// @font-url` 注释声明，HTTP 请求不携带字体参数。插件渲染时提取模板声明，异步下载字体至本地 `font_cache/` 缓存目录并即时挂载到字体扫描路径供 Typst 匹配（详见 [Typst模板书写指南](TYPST_TEMPLATE_GUIDE.md) 的字体章节）。
 
 **示例:**
 ```bash

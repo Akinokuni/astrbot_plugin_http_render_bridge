@@ -20,7 +20,7 @@
 
 #set page(width: 600pt, height: auto, margin: 28pt,
          fill: gradient.linear(rgb("#fdfbfb"), rgb("#ebedee"), angle: 135deg))
-#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", region: "cn", size: 13pt)
+#set text(font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"), lang: "zh", region: "cn", size: 13pt)
 
 #block(fill: white, radius: 14pt, stroke: 1pt + rgb("#e5e7eb"), inset: (x: 26pt, y: 24pt))[
   #text(size: 20pt, weight: "bold", fill: rgb("#111827"))[#qq 入群答题]

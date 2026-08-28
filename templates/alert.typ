@@ -7,7 +7,7 @@
 #let level = data.at("level", default: "WARNING")
 
 #set page(width: 560pt, height: auto, margin: 30pt, fill: rgb("#fff5f5"))
-#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", region: "cn", size: 14pt)
+#set text(font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"), lang: "zh", region: "cn", size: 14pt)
 
 #block(fill: white, radius: 12pt, stroke: 1.5pt + rgb("#f56565"), inset: (x: 26pt, y: 24pt))[
   #align(center)[#text(size: 40pt, weight: "bold", fill: rgb("#e53e3e"))[!]]

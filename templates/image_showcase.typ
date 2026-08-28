@@ -13,7 +13,7 @@
 
 #set page(width: 640pt, height: auto, margin: 30pt,
          fill: gradient.linear(rgb("#fdf2f8"), rgb("#fce7f3"), angle: 180deg))
-#set text(font: ("Noto Sans SC", "Microsoft YaHei"), lang: "zh", region: "cn", size: 14pt)
+#set text(font: ("Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", "SimHei"), lang: "zh", region: "cn", size: 14pt)
 
 #let show-image(uri, filename) = align(center)[
   #image(hex-to-bytes(uri), width: 100%)
